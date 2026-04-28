@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Six Flags Ticket Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+:root {
+  --red: #E31837;
+  --red-dark: #AA1128;
+  --red-deeper: #7A0A1B;
+  --red-pale: #FFF0F2;
+  --black: #111111;
+  --white: #FFFFFF;
+  --gray-bg: #F7F7F7;
+  --gray-line: #E5E5E5;
+  --gray-text: #888888;
+  --text: #1A1A1A;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--white);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── HEADER ─────────────────────────── */
+.site-header {
+  background: var(--red);
+  padding: 0 2rem;
+  height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 999;
+  box-shadow: 0 2px 12px rgba(227,24,55,0.3);
+}
+.logo-text {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 2rem; letter-spacing: 0.04em;
+  color: var(--white);
+}
+.logo-text span { color: #FFD700; }
+
+.step-pills {
+  display: flex; align-items: center; gap: 6px;
+}
+.pill {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.7rem; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  transition: color 0.3s;
+}
+.pill.active { color: #FFD700; }
+.pill.done { color: rgba(255,255,255,0.8); }
+.pill-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem;
+}
+.pill.active .pill-num { background: #FFD700; border-color: #FFD700; color: var(--red-dark); }
+.pill.done .pill-num { background: rgba(255,255,255,0.3); }
+.pill-sep { width: 18px; height: 1px; background: rgba(255,255,255,0.25); }
+
+/* ── PAGE SYSTEM ─────────────────────── */
+.page { display: none; animation: pageIn 0.45s ease both; }
+.page.active { display: block; }
+@keyframes pageIn {
+  from { opacity:0; transform: translateY(18px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ── HERO / LOCATION ─────────────────── */
+.hero {
+  background: var(--red);
+  min-height: calc(100vh - 60px);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 4rem 2rem; text-align: center;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(45deg, rgba(0,0,0,0.04) 0, rgba(0,0,0,0.04) 1px, transparent 1px, transparent 50px),
+    repeating-linear-gradient(-45deg, rgba(0,0,0,0.04) 0, rgba(0,0,0,0.04) 1px, transparent 1px, transparent 50px);
+}
+.hero-flag {
+  font-size: 4rem; margin-bottom: 0.5rem; position: relative;
+  animation: flagWave 2s ease-in-out infinite;
+}
+@keyframes flagWave {
+  0%,100% { transform: rotate(-3deg); }
+  50%      { transform: rotate(3deg); }
+}
+.hero-title {
+  font-family: 'Bebas Neue', cursive;
+  font-size: clamp(3.5rem, 9vw, 7rem);
+  color: var(--white); line-height: 0.95;
+  letter-spacing: 0.03em; position: relative;
+  margin-bottom: 0.5rem;
+}
+.hero-title .yellow { color: #FFD700; }
+.hero-sub {
+  font-size: 1rem; color: rgba(255,255,255,0.75);
+  max-width: 440px; margin: 0.8rem auto 2.5rem;
+  line-height: 1.6;
+}
+.location-input-wrap {
+  position: relative;
+  background: var(--white);
+  border-radius: 6px;
+  display: flex; align-items: center;
+  overflow: hidden;
+  width: 100%; max-width: 540px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+}
+.location-icon {
+  padding: 0 1rem; color: var(--gray-text); font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.location-input-wrap input {
+  flex: 1; border: none; outline: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1rem; color: var(--text);
+  padding: 1rem 0.5rem;
+  background: transparent;
+}
+.location-input-wrap input::placeholder { color: #BBBBBB; }
+.btn-find {
+  background: var(--red-dark);
+  color: var(--white);
+  border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 1rem 1.6rem;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.btn-find:hover { background: var(--red-deeper); }
+.location-note { font-size: 0.75rem; color: rgba(255,255,255,0.5); margin-top: 0.8rem; position:relative; }
+
+/* ── FINDING SPINNER ─────────────────── */
+.finding-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(227,24,55,0.97);
+  flex-direction: column; align-items: center; justify-content: center;
+  gap: 1rem;
+}
+.finding-overlay.show { display: flex; }
+.spinner {
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 4px solid rgba(255,255,255,0.2);
+  border-top-color: #FFD700;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.finding-text {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.6rem; color: var(--white); letter-spacing: 0.1em;
+}
+.finding-sub { font-size: 0.85rem; color: rgba(255,255,255,0.65); }
+
+/* ── PARK RESULT ─────────────────────── */
+.park-result-wrap {
+  background: var(--gray-bg); min-height: calc(100vh - 60px);
+  padding: 3rem 2rem 4rem;
+}
+.park-result-inner { max-width: 760px; margin: 0 auto; }
+.section-eyebrow {
+  font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--red); margin-bottom: 0.5rem;
+}
+.section-title {
+  font-family: 'Bebas Neue', cursive;
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  color: var(--black); letter-spacing: 0.03em;
+  line-height: 1; margin-bottom: 0.5rem;
+}
+.red-bar { width: 48px; height: 4px; background: var(--red); margin: 1rem 0 2rem; border-radius: 2px; }
+
+.park-card-big {
+  background: var(--white);
+  border: 1.5px solid var(--gray-line);
+  border-radius: 10px; overflow: hidden;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.park-card-header {
+  background: var(--red);
+  padding: 1.8rem 2rem;
+  display: flex; align-items: center; gap: 1.5rem;
+}
+.park-big-icon { font-size: 3rem; }
+.park-card-header-text {}
+.park-found-label {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.2em;
+  text-transform: uppercase; color: rgba(255,255,255,0.6);
+  margin-bottom: 0.3rem;
+}
+.park-found-name {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 2rem; color: var(--white); letter-spacing: 0.04em;
+}
+.park-found-loc { font-size: 0.88rem; color: rgba(255,255,255,0.75); margin-top: 0.2rem; }
+.park-card-body { padding: 1.5rem 2rem; }
+.park-fact-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.park-fact {
+  background: var(--gray-bg);
+  border-radius: 8px; padding: 1rem;
+  text-align: center;
+}
+.park-fact-num {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 2rem; color: var(--red); letter-spacing: 0.05em;
+}
+.park-fact-label { font-size: 0.72rem; color: var(--gray-text); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+.park-desc { font-size: 0.92rem; color: #555; line-height: 1.65; }
+
+/* ── BUTTONS ─────────────────────────── */
+.btn-red {
+  background: var(--red); color: var(--white);
+  border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.95rem 2.5rem; border-radius: 5px;
+  transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem;
+}
+.btn-red:hover { background: var(--red-dark); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(227,24,55,0.35); }
+.btn-red:active { transform: translateY(0); }
+.btn-ghost {
+  background: transparent; color: var(--gray-text);
+  border: 1.5px solid var(--gray-line); cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem; font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 0.9rem 2rem; border-radius: 5px;
+  transition: all 0.2s;
+}
+.btn-ghost:hover { border-color: #AAA; color: var(--text); }
+.nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; gap: 1rem; flex-wrap: wrap; }
+
+/* ── TICKET SELECTION ────────────────── */
+.tickets-wrap { max-width: 900px; margin: 0 auto; padding: 3rem 2rem 4rem; }
+.ticket-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.2rem; margin-bottom: 2.5rem;
+}
+.ticket-card {
+  border: 2px solid var(--gray-line);
+  border-radius: 10px; overflow: hidden;
+  cursor: pointer; transition: all 0.22s;
+  background: var(--white); position: relative;
+}
+.ticket-card:hover { border-color: var(--red); transform: translateY(-4px); box-shadow: 0 10px 30px rgba(227,24,55,0.15); }
+.ticket-card.selected { border-color: var(--red); box-shadow: 0 0 0 3px rgba(227,24,55,0.2); }
+.tc-popular {
+  position: absolute; top: 12px; right: 12px;
+  background: #FFD700; color: var(--red-deeper);
+  font-size: 0.6rem; font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 0.2rem 0.6rem; border-radius: 20px;
+}
+.tc-ribbon {
+  background: var(--red); height: 6px;
+}
+.ticket-card.selected .tc-ribbon { background: var(--red-dark); }
+.tc-body { padding: 1.5rem; }
+.tc-name {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.6rem; letter-spacing: 0.05em; color: var(--black);
+  margin-bottom: 0.2rem;
+}
+.tc-price {
+  font-size: 2.4rem; font-weight: 700; color: var(--red); line-height: 1;
+  margin-bottom: 0.1rem;
+}
+.tc-price sup { font-size: 1rem; vertical-align: super; }
+.tc-price-note { font-size: 0.72rem; color: var(--gray-text); margin-bottom: 1.2rem; }
+.tc-features { list-style: none; }
+.tc-features li {
+  font-size: 0.82rem; color: #555; padding: 0.3rem 0;
+  border-bottom: 1px solid var(--gray-line);
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.tc-features li:last-child { border-bottom: none; }
+.tc-features li::before { content: '▸'; color: var(--red); font-size: 0.6rem; }
+.tc-check {
+  position: absolute; bottom: 1rem; right: 1rem;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--red); color: white;
+  display: none; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700;
+}
+.ticket-card.selected .tc-check { display: flex; }
+
+/* ── FORM ────────────────────────────── */
+.form-wrap { max-width: 680px; margin: 0 auto; padding: 3rem 2rem 4rem; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+.fg { display: flex; flex-direction: column; gap: 0.4rem; }
+.fg.full { grid-column: 1 / -1; }
+label {
+  font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--red);
+}
+input[type="text"], input[type="tel"], input[type="date"], input[type="email"] {
+  background: var(--white);
+  border: 1.5px solid var(--gray-line);
+  border-radius: 5px; color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem; padding: 0.75rem 1rem;
+  outline: none; transition: border-color 0.2s; width: 100%;
+}
+input:focus { border-color: var(--red); }
+input.err { border-color: #cc0000; background: #fff8f8; }
+
+/* STUDENT TOGGLE */
+.student-toggle {
+  display: flex; align-items: center;
+  gap: 0; background: var(--gray-bg);
+  border: 1.5px solid var(--gray-line); border-radius: 5px;
+  overflow: hidden;
+}
+.st-opt {
+  flex: 1; text-align: center;
+  padding: 0.75rem; cursor: pointer;
+  font-size: 0.88rem; font-weight: 600;
+  transition: all 0.2s; color: var(--gray-text);
+  border: none; background: transparent;
+  font-family: 'DM Sans', sans-serif;
+}
+.st-opt.active { background: var(--red); color: var(--white); }
+
+.school-field { display: none; }
+.school-field.show { display: flex; }
+
+.discount-strip {
+  background: var(--red-pale); border: 1.5px solid rgba(227,24,55,0.2);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  display: flex; align-items: center; gap: 0.8rem;
+  margin-top: 1rem; font-size: 0.88rem; color: var(--red-dark); display: none;
+}
+.discount-strip.show { display: flex; }
+.discount-strip strong { font-weight: 700; }
+
+/* ── TICKET PRINTOUT ─────────────────── */
+#page-ticket { background: #F2F2F2; }
+.ticket-scene {
+  min-height: calc(100vh - 60px);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 3rem 1.5rem;
+}
+.success-head { text-align: center; margin-bottom: 2.5rem; }
+.success-icon { font-size: 3rem; animation: bounce 0.6s ease; }
+@keyframes bounce {
+  0% { transform: scale(0); } 70% { transform: scale(1.2); } 100% { transform: scale(1); }
+}
+.success-title {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 2.8rem; color: var(--black); letter-spacing: 0.05em;
+}
+.success-sub { font-size: 0.9rem; color: var(--gray-text); margin-top: 0.3rem; }
+
+/* THE TICKET ITSELF */
+.the-ticket {
+  width: 640px; max-width: 100%;
+  background: var(--white);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.08);
+  animation: ticketDrop 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.15s;
+  position: relative;
+}
+@keyframes ticketDrop {
+  from { opacity:0; transform: scale(0.85) translateY(40px); }
+  to   { opacity:1; transform: scale(1) translateY(0); }
+}
+.ticket-top {
+  background: var(--red);
+  padding: 2rem 2.2rem;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  position: relative; overflow: hidden;
+}
+.ticket-top::after {
+  content: 'SIX FLAGS';
+  position: absolute; bottom: -18px; right: -10px;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 6rem; letter-spacing: 0.05em;
+  color: rgba(0,0,0,0.12); line-height: 1;
+  pointer-events: none;
+}
+.tt-left {}
+.tt-park-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.6); }
+.tt-park-name { font-family: 'Bebas Neue', cursive; font-size: 1.7rem; color: var(--white); letter-spacing: 0.04em; margin-top: 0.1rem; }
+.tt-park-city { font-size: 0.8rem; color: rgba(255,255,255,0.7); }
+.tt-badge {
+  background: #FFD700; color: var(--red-deeper);
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.1rem; letter-spacing: 0.1em;
+  padding: 0.4rem 1rem; border-radius: 4px;
+  flex-shrink: 0; margin-top: 0.3rem;
+}
+
+/* Tear line */
+.tear-line {
+  display: flex; align-items: center; position: relative;
+  margin: 0;
+}
+.tear-line::before {
+  content: ''; flex: 1; height: 1px;
+  border-top: 2px dashed var(--gray-line);
+  margin: 0 24px;
+}
+.tear-circle-left, .tear-circle-right {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #F2F2F2; flex-shrink: 0;
+  margin-left: -14px;
+  border: 1px solid var(--gray-line);
+  border-left: none;
+}
+.tear-circle-right {
+  margin-left: auto; margin-right: -14px;
+  border-left: 1px solid var(--gray-line); border-right: none;
+}
+
+.ticket-body-inner { padding: 1.8rem 2.2rem; }
+.holder-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gray-text); margin-bottom: 0.2rem; }
+.holder-name { font-family: 'Bebas Neue', cursive; font-size: 2.2rem; color: var(--black); letter-spacing: 0.04em; margin-bottom: 1.2rem; }
+
+.ticket-meta {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;
+}
+.tm-item {}
+.tm-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray-text); margin-bottom: 0.2rem; }
+.tm-value { font-size: 0.92rem; font-weight: 600; color: var(--black); }
+
+.ticket-footer-row {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding-top: 1.2rem; border-top: 1px solid var(--gray-line);
+}
+.tf-price-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray-text); }
+.tf-price { font-family: 'Bebas Neue', cursive; font-size: 3rem; color: var(--red); line-height: 1; }
+.tf-price sup { font-size: 1.3rem; vertical-align: super; }
+
+.barcode-wrap { text-align: right; }
+.barcode { display: flex; align-items: flex-end; gap: 2px; justify-content: flex-end; }
+.b { background: var(--black); border-radius: 1px; }
+.barcode-num { font-size: 0.65rem; color: var(--gray-text); margin-top: 4px; letter-spacing: 0.15em; }
+
+.student-ribbon {
+  background: var(--red); color: white;
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; text-align: center;
+  padding: 0.35rem; display: none;
+}
+.student-ribbon.show { display: block; }
+
+.ticket-actions { display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; justify-content: center; }
+
+/* ── ORDER SUMMARY (tickets page) ──── */
+.order-box {
+  background: var(--white); border: 1.5px solid var(--gray-line);
+  border-radius: 10px; padding: 1.5rem; margin-top: 2rem;
+  max-width: 500px;
+}
+.ob-title { font-family: 'Bebas Neue', cursive; font-size: 1.3rem; letter-spacing: 0.05em; color: var(--black); margin-bottom: 1rem; }
+.ob-row { display: flex; justify-content: space-between; font-size: 0.88rem; padding: 0.35rem 0; color: #555; }
+.ob-total { display: flex; justify-content: space-between; font-size: 1.1rem; font-weight: 700; padding: 0.8rem 0 0; margin-top: 0.5rem; border-top: 2px solid var(--gray-line); color: var(--black); }
+.ob-total span:last-child { color: var(--red); }
+
+/* ── CONFETTI ────────────────────────── */
+.confetti-bit {
+  position: fixed; top: -10px; pointer-events: none; z-index: 9999;
+  animation: cfFall linear forwards;
+}
+@keyframes cfFall { to { transform: translateY(110vh) rotate(720deg); opacity:0; } }
+
+/* ── RESPONSIVE ──────────────────────── */
+@media(max-width:660px){
+  .ticket-meta { grid-template-columns: 1fr 1fr; }
+  .park-fact-grid { grid-template-columns: 1fr 1fr; }
+  .ticket-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .step-pills .pill span { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="logo-text">SIX <span>FLAGS</span></div>
+  <div class="step-pills" id="step-pills">
+    <div class="pill active" id="p1"><div class="pill-num">1</div><span>Location</span></div>
+    <div class="pill-sep"></div>
+    <div class="pill" id="p2"><div class="pill-num">2</div><span>Park</span></div>
+    <div class="pill-sep"></div>
+    <div class="pill" id="p3"><div class="pill-num">3</div><span>Tickets</span></div>
+    <div class="pill-sep"></div>
+    <div class="pill" id="p4"><div class="pill-num">4</div><span>Details</span></div>
+    <div class="pill-sep"></div>
+    <div class="pill" id="p5"><div class="pill-num">5</div><span>Your Ticket</span></div>
+  </div>
+</header>
+
+<!-- FINDING OVERLAY -->
+<div class="finding-overlay" id="finding-overlay">
+  <div class="spinner"></div>
+  <div class="finding-text" id="finding-text">LOCATING YOUR PARK</div>
+  <div class="finding-sub" id="finding-sub">Searching nearby Six Flags locations...</div>
+</div>
+
+<!-- PAGE 1: LOCATION -->
+<div class="page active" id="page-location">
+  <div class="hero">
+    <div class="hero-flag">🎢</div>
+    <div class="hero-title">SIX <span class="yellow">FLAGS</span><br>TICKET SIMULATOR</div>
+    <p class="hero-sub">Enter your city or zip code and we'll find the nearest Six Flags park for you.</p>
+    <div class="location-input-wrap">
+      <div class="location-icon">📍</div>
+      <input type="text" id="loc-input" placeholder="e.g. Dallas TX, 07882, Los Angeles..." />
+      <button class="btn-find" onclick="findPark()">Find My Park →</button>
+    </div>
+    <div class="location-note">We'll match you to the closest Six Flags location nationwide.</div>
+  </div>
+</div>
+
+<!-- PAGE 2: PARK RESULT -->
+<div class="page" id="page-park">
+  <div class="park-result-wrap">
+    <div class="park-result-inner">
+      <div class="section-eyebrow">Nearest Six Flags Found</div>
+      <div class="section-title" id="pr-headline">YOUR PARK</div>
+      <div class="red-bar"></div>
+      <div class="park-card-big">
+        <div class="park-card-header">
+          <div class="park-big-icon" id="pr-icon">🎢</div>
+          <div class="park-card-header-text">
+            <div class="park-found-label">Your Nearest Six Flags</div>
+            <div class="park-found-name" id="pr-name">—</div>
+            <div class="park-found-loc" id="pr-loc">—</div>
+          </div>
+        </div>
+        <div class="park-card-body">
+          <div class="park-fact-grid">
+            <div class="park-fact"><div class="park-fact-num" id="pr-rides">—</div><div class="park-fact-label">Rides</div></div>
+            <div class="park-fact"><div class="park-fact-num" id="pr-coasters">—</div><div class="park-fact-label">Roller Coasters</div></div>
+            <div class="park-fact"><div class="park-fact-num" id="pr-acres">—</div><div class="park-fact-label">Acres</div></div>
+          </div>
+          <div class="park-desc" id="pr-desc">—</div>
+        </div>
+      </div>
+      <div class="nav-row">
+        <button class="btn-ghost" onclick="goTo('location')">← Change Location</button>
+        <button class="btn-red" onclick="goTo('tickets')">See Tickets →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3: TICKET SELECTION -->
+<div class="page" id="page-tickets">
+  <div class="tickets-wrap">
+    <div class="section-eyebrow" id="tk-eyebrow">Six Flags — Select Your Pass</div>
+    <div class="section-title">CHOOSE YOUR<br>TICKET</div>
+    <div class="red-bar"></div>
+    <div class="ticket-grid">
+      <div class="ticket-card" onclick="selectTicket(this,'Single Day Pass',79.99)" data-t="Single Day Pass" data-p="79.99">
+        <div class="tc-ribbon"></div>
+        <div class="tc-body">
+          <div class="tc-name">Single Day Pass</div>
+          <div class="tc-price"><sup>$</sup>79<span style="font-size:1.2rem">.99</span></div>
+          <div class="tc-price-note">per person / one day</div>
+          <ul class="tc-features">
+            <li>Full-day park admission</li>
+            <li>All standard rides included</li>
+            <li>Free parking</li>
+            <li>Park map & guide</li>
+          </ul>
+        </div>
+        <div class="tc-check">✓</div>
+      </div>
+      <div class="ticket-card" onclick="selectTicket(this,'Season Pass',119.99)" data-t="Season Pass" data-p="119.99">
+        <div class="tc-popular">Best Value</div>
+        <div class="tc-ribbon"></div>
+        <div class="tc-body">
+          <div class="tc-name">Season Pass</div>
+          <div class="tc-price"><sup>$</sup>119<span style="font-size:1.2rem">.99</span></div>
+          <div class="tc-price-note">unlimited visits / full year</div>
+          <ul class="tc-features">
+            <li>Unlimited park visits</li>
+            <li>All Six Flags parks included</li>
+            <li>10% dining discount</li>
+            <li>Priority queue access</li>
+            <li>Bring-a-Friend tickets</li>
+          </ul>
+        </div>
+        <div class="tc-check">✓</div>
+      </div>
+      <div class="ticket-card" onclick="selectTicket(this,'Gold Season Pass',169.99)" data-t="Gold Season Pass" data-p="169.99">
+        <div class="tc-ribbon"></div>
+        <div class="tc-body">
+          <div class="tc-name">Gold Season Pass</div>
+          <div class="tc-price"><sup>$</sup>169<span style="font-size:1.2rem">.99</span></div>
+          <div class="tc-price-note">all-inclusive / full year</div>
+          <ul class="tc-features">
+            <li>All Season Pass benefits</li>
+            <li>Free parking all year</li>
+            <li>15% dining & retail discount</li>
+            <li>Flash Pass included</li>
+            <li>Exclusive Gold lounge access</li>
+            <li>Guest passes (4 per year)</li>
+          </ul>
+        </div>
+        <div class="tc-check">✓</div>
+      </div>
+      <div class="ticket-card" onclick="selectTicket(this,'Platinum Pass',229.99)" data-t="Platinum Pass" data-p="229.99">
+        <div class="tc-ribbon"></div>
+        <div class="tc-body">
+          <div class="tc-name">Platinum Pass</div>
+          <div class="tc-price"><sup>$</sup>229<span style="font-size:1.2rem">.99</span></div>
+          <div class="tc-price-note">VIP all-inclusive / full year</div>
+          <ul class="tc-features">
+            <li>All Gold Pass benefits</li>
+            <li>Skip-the-line every ride</li>
+            <li>VIP concierge & reserved seating</li>
+            <li>20% dining & retail discount</li>
+            <li>Behind-the-scenes tour</li>
+            <li>Unlimited guest passes</li>
+          </ul>
+        </div>
+        <div class="tc-check">✓</div>
+      </div>
+    </div>
+
+    <div class="order-box" id="order-box" style="display:none">
+      <div class="ob-title">ORDER PREVIEW</div>
+      <div class="ob-row"><span id="ob-park-name">—</span><span></span></div>
+      <div class="ob-row"><span id="ob-ticket-name">—</span><span id="ob-base-price">—</span></div>
+      <div class="ob-row" id="ob-disc-row" style="display:none"><span id="ob-disc-label" style="color:var(--red)">—</span><span id="ob-disc-amt" style="color:var(--red)">—</span></div>
+      <div class="ob-total"><span>Total</span><span id="ob-total">—</span></div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-ghost" onclick="goTo('park')">← Back</button>
+      <button class="btn-red" onclick="validateTicketSel()">Enter Your Details →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4: USER DETAILS -->
+<div class="page" id="page-details">
+  <div class="form-wrap">
+    <div class="section-eyebrow">Almost There</div>
+    <div class="section-title">YOUR DETAILS</div>
+    <div class="red-bar"></div>
+
+    <div class="form-grid">
+      <div class="fg">
+        <label for="d-fn">First Name</label>
+        <input type="text" id="d-fn" placeholder="Jordan">
+      </div>
+      <div class="fg">
+        <label for="d-ln">Last Name</label>
+        <input type="text" id="d-ln" placeholder="Smith">
+      </div>
+      <div class="fg">
+        <label for="d-email">Email</label>
+        <input type="text" id="d-email" placeholder="jordan@email.com">
+      </div>
+      <div class="fg">
+        <label for="d-phone">Phone Number</label>
+        <input type="tel" id="d-phone" placeholder="(555) 123-4567">
+      </div>
+      <div class="fg">
+        <label for="d-dob">Date of Birth</label>
+        <input type="date" id="d-dob">
+      </div>
+      <div class="fg">
+        <label for="d-loc">Your Location</label>
+        <input type="text" id="d-loc" placeholder="Auto-filled" id="d-loc" readonly style="color:#999">
+      </div>
+    </div>
+
+    <!-- Student status -->
+    <div style="margin-top:1.5rem">
+      <label style="display:block;margin-bottom:0.5rem">Are You a Student?</label>
+      <div class="student-toggle">
+        <button class="st-opt" id="st-no" onclick="setStudent(false)">No</button>
+        <button class="st-opt active" id="st-yes-btn" onclick="setStudent(true)" style="display:none">—</button>
+        <button class="st-opt" id="st-yes" onclick="setStudent(true)">Yes — I'm a Student</button>
+      </div>
+    </div>
+
+    <div class="fg school-field full" id="school-field" style="margin-top:1rem">
+      <label for="d-school">School / University Name</label>
+      <input type="text" id="d-school" placeholder="e.g. University of Texas at Arlington">
+    </div>
+
+    <div class="discount-strip" id="disc-strip">
+      <span style="font-size:1.2rem">🎓</span>
+      <div><strong>Student Discount Applied!</strong> You save 20% on your ticket as a verified student.</div>
+    </div>
+
+    <div class="nav-row">
+      <button class="btn-ghost" onclick="goTo('tickets')">← Back</button>
+      <button class="btn-red" onclick="validateDetails()">Generate My Ticket →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 5: TICKET PRINTOUT -->
+<div class="page" id="page-ticket">
+  <div class="ticket-scene">
+    <div class="success-head">
+      <div class="success-icon">🎟️</div>
+      <div class="success-title">YOUR TICKET IS READY!</div>
+      <div class="success-sub">Present this at any Six Flags entrance gate.</div>
+    </div>
+
+    <div class="the-ticket">
+      <!-- Student ribbon -->
+      <div class="student-ribbon" id="st-ribbon">🎓 Student Discount Applied — 20% Off</div>
+
+      <!-- Top red section -->
+      <div class="ticket-top">
+        <div class="tt-left">
+          <div class="tt-park-label">Six Flags Destination</div>
+          <div class="tt-park-name" id="tk-park-name">—</div>
+          <div class="tt-park-city" id="tk-park-city">—</div>
+        </div>
+        <div class="tt-badge" id="tk-badge">—</div>
+      </div>
+
+      <!-- Tear line -->
+      <div class="tear-line">
+        <div class="tear-circle-left"></div>
+        <div class="tear-circle-right"></div>
+      </div>
+
+      <!-- Body -->
+      <div class="ticket-body-inner">
+        <div class="holder-label">Ticket Holder</div>
+        <div class="holder-name" id="tk-holder">—</div>
+
+        <div class="ticket-meta">
+          <div class="tm-item">
+            <div class="tm-label">Visit Date</div>
+            <div class="tm-value" id="tk-date">—</div>
+          </div>
+          <div class="tm-item">
+            <div class="tm-label">Ticket Type</div>
+            <div class="tm-value" id="tk-type">—</div>
+          </div>
+          <div class="tm-item">
+            <div class="tm-label">Ticket ID</div>
+            <div class="tm-value" id="tk-id">—</div>
+          </div>
+          <div class="tm-item">
+            <div class="tm-label">Student</div>
+            <div class="tm-value" id="tk-student">—</div>
+          </div>
+        </div>
+
+        <div class="ticket-footer-row">
+          <div>
+            <div class="tf-price-label">Amount Paid</div>
+            <div class="tf-price"><sup>$</sup><span id="tk-price">0.00</span></div>
+          </div>
+          <div class="barcode-wrap">
+            <div class="barcode" id="tk-barcode"></div>
+            <div class="barcode-num" id="tk-barcode-num">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ticket-actions">
+      <button class="btn-red" onclick="downloadCSV()">⬇ Download CSV Receipt</button>
+      <button class="btn-ghost" onclick="resetAll()">Book Another Ticket</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── SIX FLAGS PARK DATA ──────────────────────────────────────────────────────
+const PARKS = [
+  {
+    name:"Six Flags Over Texas", city:"Arlington, TX", icon:"🤠",
+    rides:45, coasters:13, acres:212,
+    keywords:["texas","tx","dallas","fort worth","arlington","dfw","waco","houston"],
+    desc:"The original Six Flags park since 1961! Home to iconic coasters like Titan, Mr. Freeze, and Batman: The Ride. A Texas-sized thrill destination in the heart of the DFW Metroplex."
+  },
+  {
+    name:"Six Flags Fiesta Texas", city:"San Antonio, TX", icon:"🌮",
+    rides:40, coasters:8, acres:200,
+    keywords:["san antonio","fiesta","sa tx","78212"],
+    desc:"Nestled inside a natural limestone quarry, Fiesta Texas features Wonder Woman Golden Lasso Coaster — one of the world's top-rated steel coasters — plus vibrant shows and family rides."
+  },
+  {
+    name:"Six Flags Over Georgia", city:"Austell, GA", icon:"🍑",
+    rides:43, coasters:11, acres:290,
+    keywords:["georgia","ga","atlanta","austell","marietta","alabama","al","south carolina","sc","tennessee","tn"],
+    desc:"The South's top thrill park featuring Twisted Cyclone, Goliath, and Superman: Ultimate Flight. A beloved Georgia landmark since 1967 with world-class coasters for all ages."
+  },
+  {
+    name:"Six Flags Great Adventure", city:"Jackson, NJ", icon:"🗽",
+    rides:48, coasters:14, acres:2200,
+    keywords:["new jersey","nj","jackson","toms river","trenton","philadelphia","delaware","de","nyc","new york"],
+    desc:"The world's largest Six Flags park! Kingda Ka — the world's tallest roller coaster — calls this home. Safari off-road adventure and El Toro round out an unbeatable lineup."
+  },
+  {
+    name:"Six Flags Magic Mountain", city:"Valencia, CA", icon:"🌅",
+    rides:50, coasters:20, acres:262,
+    keywords:["california","ca","los angeles","la","valencia","burbank","anaheim","long beach","san diego","hollywood","orange county","oc"],
+    desc:"The Thrill Capital of the World™ with a record-breaking 20 coasters including Twisted Colossus, Full Throttle, and West Coast Racers. LA's ultimate adrenaline destination."
+  },
+  {
+    name:"Six Flags Great America", city:"Gurnee, IL", icon:"🌽",
+    rides:44, coasters:13, acres:300,
+    keywords:["illinois","il","gurnee","chicago","kenosha","wisconsin","wi","milwaukee","indiana","in","iowa"],
+    desc:"The Midwest's premier thrill park with Goliath — the world's fastest, tallest, steepest wooden coaster — plus Maxx Force and a thriving Fright Fest every fall."
+  },
+  {
+    name:"Six Flags New England", city:"Agawam, MA", icon:"🍂",
+    rides:36, coasters:12, acres:275,
+    keywords:["massachusetts","ma","new england","agawam","springfield","hartford","connecticut","ct","rhode island","ri","vermont","vt","boston","new hampshire","nh","maine","me"],
+    desc:"New England's top coaster park, home of Wicked Cyclone and Superman: The Ride. Nestled on the Connecticut River and famous for its incredible Fright Fest Halloween event."
+  },
+  {
+    name:"Six Flags America", city:"Largo, MD", icon:"🏛️",
+    rides:32, coasters:9, acres:500,
+    keywords:["maryland","md","dc","washington","virginia","va","largo","bowie","baltimore","northern virginia","nova"],
+    desc:"The Mid-Atlantic's Six Flags destination near the nation's capital. Featuring Superman: Ride of Steel, Wild One, and Apocalypse — plus Hurricane Harbor water park."
+  },
+  {
+    name:"Six Flags Discovery Kingdom", city:"Vallejo, CA", icon:"🦁",
+    rides:40, coasters:7, acres:135,
+    keywords:["vallejo","bay area","san francisco","sf","sacramento","oakland","fremont","northern california","norcal","napa"],
+    desc:"Where thrills meet wildlife! Unique combination of roller coasters, animal attractions, and marine life shows. Located in Vallejo, just 30 miles from San Francisco."
+  },
+  {
+    name:"Six Flags St. Louis", city:"Eureka, MO", icon:"🌉",
+    rides:40, coasters:10, acres:500,
+    keywords:["missouri","mo","st louis","saint louis","eureka","kansas city","ks","iowa","ia","arkansas","ar","springfield"],
+    desc:"Missouri's thrill headquarters since 1971. The Boss, Mr. Freeze, and Ninja anchor an impressive coaster lineup, with Boss ranked among the best wooden coasters in the nation."
+  },
+  {
+    name:"Six Flags Hurricane Harbor Phoenix", city:"Litchfield Park, AZ", icon:"☀️",
+    rides:28, coasters:4, acres:165,
+    keywords:["arizona","az","phoenix","scottsdale","tempe","mesa","glendale","tucson","new mexico","nm"],
+    desc:"The Southwest's thrilling destination featuring Bonzai Pipelines, Captain Hook's Revenge, and Typhoon Twister. Desert heat meets world-class water and thrill rides."
+  },
+];
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+const S = {
+  location: '',
+  park: null,
+  ticket: null,
+  ticketPrice: 0,
+  isStudent: false,
+  school: '',
+  user: {},
+  discount: 0,
+  finalPrice: 0,
+  ticketId: ''
+};
+
+// ── NAVIGATION ───────────────────────────────────────────────────────────────
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  updateSteps(page);
+}
+
+function updateSteps(page) {
+  const map = { location: 1, park: 2, tickets: 3, details: 4, ticket: 5 };
+  const n = map[page] || 1;
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('p' + i);
+    el.classList.remove('active','done');
+    if (i === n) el.classList.add('active');
+    else if (i < n) el.classList.add('done');
+  }
+}
+
+// ── FIND PARK ────────────────────────────────────────────────────────────────
+function findPark() {
+  const raw = document.getElementById('loc-input').value.trim();
+  if (!raw) { alert('Please enter your city, state, or zip code.'); return; }
+  S.location = raw;
+
+  // Show overlay
+  const ov = document.getElementById('finding-overlay');
+  ov.classList.add('show');
+
+  setTimeout(() => {
+    const park = matchPark(raw.toLowerCase());
+    S.park = park;
+    populatePark(park);
+    ov.classList.remove('show');
+    goTo('park');
+    // Pre-fill location in details form
+    document.getElementById('d-loc').value = raw;
+  }, 1800);
+}
+
+function matchPark(loc) {
+  // Score each park by keyword matches
+  let best = null, bestScore = -1;
+  for (const p of PARKS) {
+    let score = 0;
+    for (const kw of p.keywords) {
+      if (loc.includes(kw)) score += kw.length; // longer matches = more specific
+    }
+    if (score > bestScore) { bestScore = score; best = p; }
+  }
+  // Default to Great Adventure if nothing matched
+  return best && bestScore > 0 ? best : PARKS[3];
+}
+
+function populatePark(p) {
+  document.getElementById('pr-headline').textContent = p.name.toUpperCase();
+  document.getElementById('pr-icon').textContent = p.icon;
+  document.getElementById('pr-name').textContent = p.name;
+  document.getElementById('pr-loc').textContent = p.city;
+  document.getElementById('pr-rides').textContent = p.rides + '+';
+  document.getElementById('pr-coasters').textContent = p.coasters;
+  document.getElementById('pr-acres').textContent = p.acres;
+  document.getElementById('pr-desc').textContent = p.desc;
+  document.getElementById('tk-eyebrow').textContent = p.name + ' — Select Your Pass';
+}
+
+// ── TICKET SELECTION ─────────────────────────────────────────────────────────
+let selTicketEl = null;
+function selectTicket(el, name, price) {
+  if (selTicketEl) selTicketEl.classList.remove('selected');
+  el.classList.add('selected');
+  selTicketEl = el;
+  S.ticket = name;
+  S.ticketPrice = parseFloat(price);
+  updateOrderBox();
+  document.getElementById('order-box').style.display = 'block';
+}
+
+function updateOrderBox() {
+  const base = S.ticketPrice;
+  const disc = S.isStudent ? Math.round(base * 0.20 * 100) / 100 : 0;
+  S.discount = disc;
+  S.finalPrice = Math.round((base - disc) * 100) / 100;
+
+  document.getElementById('ob-park-name').textContent = S.park ? S.park.name : '—';
+  document.getElementById('ob-ticket-name').textContent = S.ticket || '—';
+  document.getElementById('ob-base-price').textContent = '$' + base.toFixed(2);
+
+  const discRow = document.getElementById('ob-disc-row');
+  if (disc > 0) {
+    discRow.style.display = 'flex';
+    document.getElementById('ob-disc-label').textContent = 'Student Discount (20%)';
+    document.getElementById('ob-disc-amt').textContent = '-$' + disc.toFixed(2);
+  } else {
+    discRow.style.display = 'none';
+  }
+  document.getElementById('ob-total').textContent = '$' + S.finalPrice.toFixed(2);
+}
+
+function validateTicketSel() {
+  if (!S.ticket) { alert('Please select a ticket type.'); return; }
+  goTo('details');
+}
+
+// ── STUDENT TOGGLE ───────────────────────────────────────────────────────────
+function setStudent(val) {
+  S.isStudent = val;
+  document.getElementById('st-no').classList.toggle('active', !val);
+  document.getElementById('st-yes').classList.toggle('active', val);
+  document.getElementById('school-field').classList.toggle('show', val);
+  document.getElementById('disc-strip').classList.toggle('show', val);
+  updateOrderBox();
+}
+
+// init student toggle
+document.getElementById('st-no').classList.add('active');
+
+// ── DETAILS VALIDATION ───────────────────────────────────────────────────────
+function req(id) {
+  const el = document.getElementById(id);
+  const ok = el && el.value.trim();
+  if (el) el.classList.toggle('err', !ok);
+  return !!ok;
+}
+
+function validateDetails() {
+  let ok = req('d-fn') & req('d-ln') & req('d-email') & req('d-phone') & req('d-dob');
+  if (S.isStudent && !req('d-school')) ok = false;
+  if (!ok) { alert('Please fill in all required fields.'); return; }
+
+  if (S.isStudent) S.school = document.getElementById('d-school').value.trim();
+  S.user = {
+    firstName: document.getElementById('d-fn').value.trim(),
+    lastName: document.getElementById('d-ln').value.trim(),
+    email: document.getElementById('d-email').value.trim(),
+    phone: document.getElementById('d-phone').value.trim(),
+    dob: document.getElementById('d-dob').value,
+    location: S.location
+  };
+  S.discount = S.isStudent ? Math.round(S.ticketPrice * 0.20 * 100) / 100 : 0;
+  S.finalPrice = Math.round((S.ticketPrice - S.discount) * 100) / 100;
+  buildTicket();
+  goTo('ticket');
+  launchConfetti();
+}
+
+// ── BUILD TICKET ─────────────────────────────────────────────────────────────
+function buildTicket() {
+  const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  S.ticketId = 'SF-' + Math.random().toString(36).substring(2, 10).toUpperCase();
+
+  document.getElementById('tk-park-name').textContent = S.park.name;
+  document.getElementById('tk-park-city').textContent = S.park.city;
+  document.getElementById('tk-badge').textContent = S.ticket;
+  document.getElementById('tk-holder').textContent = S.user.firstName + ' ' + S.user.lastName;
+  document.getElementById('tk-date').textContent = today;
+  document.getElementById('tk-type').textContent = S.ticket;
+  document.getElementById('tk-id').textContent = S.ticketId;
+  document.getElementById('tk-student').textContent = S.isStudent ? 'Yes (' + (S.school || 'Student') + ')' : 'No';
+  document.getElementById('tk-price').textContent = S.finalPrice.toFixed(2);
+
+  // Student ribbon
+  document.getElementById('st-ribbon').classList.toggle('show', S.isStudent);
+
+  // Barcode
+  const bc = document.getElementById('tk-barcode');
+  bc.innerHTML = '';
+  for (let i = 0; i < 32; i++) {
+    const b = document.createElement('div');
+    b.className = 'b';
+    b.style.width = (Math.random() > 0.5 ? '3px' : '2px');
+    b.style.height = (14 + Math.random() * 20).toFixed(0) + 'px';
+    b.style.opacity = Math.random() > 0.25 ? '1' : '0.25';
+    bc.appendChild(b);
+  }
+  document.getElementById('tk-barcode-num').textContent = S.ticketId;
+}
+
+// ── CSV EXPORT ───────────────────────────────────────────────────────────────
+function downloadCSV() {
+  const rows = [
+    ['Field', 'Value'],
+    ['Ticket ID', S.ticketId],
+    ['First Name', S.user.firstName],
+    ['Last Name', S.user.lastName],
+    ['Email', S.user.email],
+    ['Phone', S.user.phone],
+    ['Date of Birth', S.user.dob],
+    ['Location Entered', S.user.location],
+    ['Park', S.park.name],
+    ['Park City', S.park.city],
+    ['Ticket Type', S.ticket],
+    ['Base Price', '$' + S.ticketPrice.toFixed(2)],
+    ['Student', S.isStudent ? 'Yes' : 'No'],
+    ['School', S.isStudent ? S.school : 'N/A'],
+    ['Student Discount', S.isStudent ? '-$' + S.discount.toFixed(2) + ' (20%)' : 'None'],
+    ['Final Price Paid', '$' + S.finalPrice.toFixed(2)],
+    ['Purchase Date', new Date().toLocaleDateString()],
+  ];
+  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'SixFlags_Ticket_' + S.ticketId + '.csv';
+  a.click();
+}
+
+// ── CONFETTI ─────────────────────────────────────────────────────────────────
+function launchConfetti() {
+  const colors = ['#E31837','#FFD700','#FFFFFF','#AA1128','#FF6B6B'];
+  for (let i = 0; i < 70; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-bit';
+    const sz = 6 + Math.random() * 8;
+    el.style.cssText = `
+      left:${Math.random() * 100}vw;
+      width:${sz}px; height:${sz}px;
+      background:${colors[Math.floor(Math.random() * colors.length)]};
+      border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+      animation-duration:${2.2 + Math.random() * 1.8}s;
+      animation-delay:${Math.random() * 0.7}s;
+      transform:rotate(${Math.random() * 360}deg);
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4500);
+  }
+}
+
+// ── RESET ────────────────────────────────────────────────────────────────────
+function resetAll() {
+  Object.assign(S, { location:'', park:null, ticket:null, ticketPrice:0, isStudent:false, school:'', user:{}, discount:0, finalPrice:0, ticketId:'' });
+  document.getElementById('loc-input').value = '';
+  document.querySelectorAll('input').forEach(i => { i.value = ''; i.classList.remove('err'); });
+  document.querySelectorAll('.ticket-card').forEach(c => c.classList.remove('selected'));
+  selTicketEl = null;
+  setStudent(false);
+  document.getElementById('order-box').style.display = 'none';
+  goTo('location');
+}
+
+// Allow Enter key on location field
+document.getElementById('loc-input').addEventListener('keydown', e => { if (e.key === 'Enter') findPark(); });
+document.querySelectorAll('input').forEach(i => i.addEventListener('input', () => i.classList.remove('err')));
+</script>
+</body>
+</html>
