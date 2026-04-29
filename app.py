@@ -199,6 +199,6 @@ def download_csv():
         as_attachment=True,
         download_name=f"SixFlags_Ticket_{order.get('ticket_id','receipt')}.csv"
     )
-
+app = app
 if __name__ == "__main__":
     app.run(debug=True)
