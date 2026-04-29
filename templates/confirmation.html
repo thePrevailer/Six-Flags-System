@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% set step = 5 %}
+{% block head %}
+<style>
+#page-ticket{background:#F2F2F2;min-height:calc(100vh - 60px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1.5rem;}
+.success-head{text-align:center;margin-bottom:2.5rem;}
+.success-icon{font-size:3rem;animation:bounce 0.6s ease;}
+@keyframes bounce{0%{transform:scale(0);}70%{transform:scale(1.2);}100%{transform:scale(1);}}
+.success-title{font-family:'Bebas Neue',cursive;font-size:2.8rem;color:var(--black);letter-spacing:0.05em;}
+.success-sub{font-size:0.9rem;color:var(--gray-text);margin-top:0.3rem;}
+.the-ticket{width:640px;max-width:100%;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.15),0 4px 12px rgba(0,0,0,0.08);animation:ticketDrop 0.7s cubic-bezier(0.22,1,0.36,1) both;animation-delay:0.15s;}
+@keyframes ticketDrop{from{opacity:0;transform:scale(0.85) translateY(40px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.st-ribbon{background:var(--red);color:#fff;font-size:0.68rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;text-align:center;padding:0.35rem;}
+.ticket-top{background:var(--red);padding:2rem 2.2rem;display:flex;align-items:flex-start;justify-content:space-between;position:relative;overflow:hidden;}
+.ticket-top::after{content:'SIX FLAGS';position:absolute;bottom:-18px;right:-10px;font-family:'Bebas Neue',cursive;font-size:6rem;letter-spacing:0.05em;color:rgba(0,0,0,0.12);line-height:1;pointer-events:none;}
+.tt-park-label{font-size:0.62rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.6);}
+.tt-park-name{font-family:'Bebas Neue',cursive;font-size:1.7rem;color:#fff;letter-spacing:0.04em;margin-top:0.1rem;}
+.tt-park-city{font-size:0.8rem;color:rgba(255,255,255,0.7);}
+.tt-badge{background:#FFD700;color:var(--red-deeper);font-family:'Bebas Neue',cursive;font-size:1.1rem;letter-spacing:0.1em;padding:0.4rem 1rem;border-radius:4px;flex-shrink:0;margin-top:0.3rem;}
+.tear-line{display:flex;align-items:center;}
+.tear-line::before{content:'';flex:1;border-top:2px dashed var(--gray-line);margin:0 24px;}
+.tear-circ{width:28px;height:28px;border-radius:50%;background:#F2F2F2;flex-shrink:0;border:1px solid var(--gray-line);}
+.tear-circ.left{margin-left:-14px;border-left:none;}
+.tear-circ.right{margin-left:auto;margin-right:-14px;border-right:none;}
+.ticket-body-inner{padding:1.8rem 2.2rem;}
+.holder-label{font-size:0.62rem;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--gray-text);margin-bottom:0.2rem;}
+.holder-name{font-family:'Bebas Neue',cursive;font-size:2.2rem;color:var(--black);letter-spacing:0.04em;margin-bottom:1.2rem;}
+.ticket-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;}
+.tm-label{font-size:0.6rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--gray-text);margin-bottom:0.2rem;}
+.tm-value{font-size:0.92rem;font-weight:600;color:var(--black);}
+.ticket-footer-row{display:flex;align-items:flex-end;justify-content:space-between;padding-top:1.2rem;border-top:1px solid var(--gray-line);}
+.tf-price-label{font-size:0.62rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--gray-text);}
+.tf-price{font-family:'Bebas Neue',cursive;font-size:3rem;color:var(--red);line-height:1;}
+.tf-price sup{font-size:1.3rem;vertical-align:super;}
+.barcode{display:flex;align-items:flex-end;gap:2px;justify-content:flex-end;}
+.b{background:var(--black);border-radius:1px;}
+.bc-num{font-size:0.65rem;color:var(--gray-text);margin-top:4px;letter-spacing:0.15em;text-align:right;}
+.ticket-actions{display:flex;gap:1rem;margin-top:2rem;flex-wrap:wrap;justify-content:center;}
+@media(max-width:600px){.ticket-meta{grid-template-columns:1fr 1fr;}}
+</style>
+<script>
+window.onload = function() {
+  // generate barcode bars
+  var bc = document.getElementById('tk-barcode');
+  for (var i=0; i<32; i++) {
+    var b = document.createElement('div');
+    b.className = 'b';
+    b.style.width = (Math.random()>0.5?'3px':'2px');
+    b.style.height = (14 + Math.random()*20).toFixed(0)+'px';
+    b.style.opacity = Math.random()>0.25?'1':'0.25';
+    bc.appendChild(b);
+  }
+  // confetti
+  var colors=['#E31837','#FFD700','#FFFFFF','#AA1128'];
+  for(var j=0;j<70;j++){
+    var el=document.createElement('div');
+    var sz=6+Math.random()*8;
+    el.style.cssText='position:fixed;top:-10px;pointer-events:none;z-index:9999;left:'+Math.random()*100+'vw;width:'+sz+'px;height:'+sz+'px;background:'+colors[Math.floor(Math.random()*colors.length)]+';border-radius:'+(Math.random()>0.5?'50%':'2px')+';animation:cfFall '+(2.2+Math.random()*1.8)+'s '+(Math.random()*0.7)+'s linear forwards;';
+    document.body.appendChild(el);
+    setTimeout(function(e){return function(){e.remove()};}(el),4500);
+  }
+}
+</script>
+<style>@keyframes cfFall{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}</style>
+{% endblock %}
+{% block content %}
+<div id="page-ticket">
+  <div class="success-head">
+    <div class="success-icon">🎟️</div>
+    <div class="success-title">YOUR TICKET IS READY!</div>
+    <div class="success-sub">Present this at any Six Flags entrance gate.</div>
+  </div>
+
+  <div class="the-ticket">
+    {% if user.student %}
+    <div class="st-ribbon">🎓 Student Discount Applied — 20% Off</div>
+    {% endif %}
+
+    <div class="ticket-top">
+      <div>
+        <div class="tt-park-label">Six Flags Destination</div>
+        <div class="tt-park-name">{{ park.icon }} {{ park.name }}</div>
+        <div class="tt-park-city">{{ park.city }} &nbsp;·&nbsp; {{ "{:,}".format(park.dist) }} mi from you &nbsp;·&nbsp; 🚗 {{ park.drive }}</div>
+      </div>
+      <div class="tt-badge">{{ ticket.name }}</div>
+    </div>
+
+    <div class="tear-line">
+      <div class="tear-circ left"></div>
+      <div class="tear-circ right"></div>
+    </div>
+
+    <div class="ticket-body-inner">
+      <div class="holder-label">Ticket Holder</div>
+      <div class="holder-name">{{ user.first_name }} {{ user.last_name }}</div>
+      <div class="ticket-meta">
+        <div><div class="tm-label">Visit Date</div><div class="tm-value">{{ order.date }}</div></div>
+        <div><div class="tm-label">Ticket Type</div><div class="tm-value">{{ ticket.name }}</div></div>
+        <div><div class="tm-label">Ticket ID</div><div class="tm-value">{{ order.ticket_id }}</div></div>
+        <div><div class="tm-label">Student</div><div class="tm-value">{% if user.student %}Yes{% else %}No{% endif %}</div></div>
+      </div>
+      {% if user.student %}
+      <div style="font-size:0.8rem;color:var(--gray-text);margin-bottom:1rem;">🎓 {{ user.school }} &nbsp;·&nbsp; 20% student discount applied</div>
+      {% endif %}
+      <div class="ticket-footer-row">
+        <div>
+          <div class="tf-price-label">Amount Paid</div>
+          <div class="tf-price"><sup>$</sup>{{ "%.2f"|format(order.final_price) }}</div>
+          {% if user.student %}<div style="font-size:0.75rem;color:var(--red);margin-top:0.2rem;">Saved ${{ "%.2f"|format(order.discount) }}</div>{% endif %}
+        </div>
+        <div>
+          <div class="barcode" id="tk-barcode"></div>
+          <div class="bc-num">{{ order.ticket_id }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ticket-actions">
+    <a href="/download-csv" class="btn-red">⬇ Download CSV Receipt</a>
+    <a href="/location" class="btn-ghost">Book Another Ticket</a>
+  </div>
+</div>
+{% endblock %}

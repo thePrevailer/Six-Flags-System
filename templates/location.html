@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% set step = 1 %}
+{% block head %}
+<style>
+.hero{background:var(--red);min-height:calc(100vh - 60px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 2rem;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(0,0,0,0.04) 0,rgba(0,0,0,0.04) 1px,transparent 1px,transparent 50px),repeating-linear-gradient(-45deg,rgba(0,0,0,0.04) 0,rgba(0,0,0,0.04) 1px,transparent 1px,transparent 50px);}
+.hero-flag{font-size:4rem;margin-bottom:0.5rem;animation:flagWave 2s ease-in-out infinite;position:relative;}
+@keyframes flagWave{0%,100%{transform:rotate(-3deg);}50%{transform:rotate(3deg);}}
+.hero-title{font-family:'Bebas Neue',cursive;font-size:clamp(3.5rem,9vw,7rem);color:#fff;line-height:0.95;letter-spacing:0.03em;position:relative;margin-bottom:0.5rem;}
+.hero-title .yellow{color:#FFD700;}
+.hero-sub{font-size:1rem;color:rgba(255,255,255,0.75);max-width:440px;margin:0.8rem auto 2.5rem;line-height:1.6;position:relative;}
+.loc-form{position:relative;background:#fff;border-radius:6px;display:flex;align-items:center;overflow:hidden;width:100%;max-width:560px;box-shadow:0 8px 30px rgba(0,0,0,0.25);}
+.loc-icon{padding:0 1rem;color:var(--gray-text);font-size:1.1rem;flex-shrink:0;position:relative;}
+.loc-form input{flex:1;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:1rem;color:var(--text);padding:1rem 0.5rem;background:transparent;}
+.loc-form input::placeholder{color:#BBBBBB;}
+.loc-form button{background:var(--red-dark);color:#fff;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:1rem 1.6rem;transition:background 0.2s;flex-shrink:0;}
+.loc-form button:hover{background:var(--red-deeper);}
+.loc-note{font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:0.8rem;position:relative;}
+.hero-error{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:0.75rem 1.2rem;color:#fff;font-size:0.88rem;margin-bottom:1.5rem;position:relative;max-width:560px;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="hero">
+  <div class="hero-flag">🎢</div>
+  <div class="hero-title">SIX <span class="yellow">FLAGS</span><br>TICKET SIMULATOR</div>
+  <p class="hero-sub">Enter your city, state, or zip — we'll find every Six Flags near you and show real driving distances.</p>
+  {% if error %}<div class="hero-error">⚠️ {{ error }}</div>{% endif %}
+  <form class="loc-form" method="POST" action="/location">
+    <div class="loc-icon">📍</div>
+    <input type="text" name="location" placeholder="e.g. Grambling LA, Dallas TX, 07882..." autofocus required>
+    <button type="submit">Find Parks →</button>
+  </form>
+  <div class="loc-note">We search all 11 U.S. Six Flags parks and rank them by distance from you.</div>
+</div>
+{% endblock %}

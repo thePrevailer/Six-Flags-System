@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% set step = 3 %}
+{% block head %}
+<style>
+.park-strip{background:var(--red);color:#fff;border-radius:8px;padding:0.85rem 1.4rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;font-size:0.9rem;}
+.park-strip strong{font-family:'Bebas Neue',cursive;font-size:1.2rem;letter-spacing:0.05em;}
+.park-strip .dist{font-size:0.78rem;opacity:0.8;}
+.ticket-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.2rem;margin-bottom:2rem;}
+.tcard{border:2px solid var(--gray-line);border-radius:10px;overflow:hidden;cursor:pointer;transition:all 0.22s;background:#fff;position:relative;}
+.tcard:hover{border-color:var(--red);transform:translateY(-4px);box-shadow:0 10px 30px rgba(227,24,55,0.15);}
+.tcard.checked{border-color:var(--red);box-shadow:0 0 0 3px rgba(227,24,55,0.2);}
+.tc-popular{position:absolute;top:12px;right:12px;background:#FFD700;color:var(--red-deeper);font-size:0.6rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:20px;}
+.tc-ribbon{background:var(--red);height:6px;}
+.tcard.checked .tc-ribbon{background:var(--red-dark);}
+.tc-body{padding:1.5rem;}
+.tc-name{font-family:'Bebas Neue',cursive;font-size:1.6rem;letter-spacing:0.05em;color:var(--black);margin-bottom:0.2rem;}
+.tc-price{font-size:2.4rem;font-weight:700;color:var(--red);line-height:1;margin-bottom:0.1rem;}
+.tc-price sup{font-size:1rem;vertical-align:super;}
+.tc-note{font-size:0.72rem;color:var(--gray-text);margin-bottom:1.2rem;}
+.tc-features{list-style:none;}
+.tc-features li{font-size:0.82rem;color:#555;padding:0.3rem 0;border-bottom:1px solid var(--gray-line);display:flex;align-items:center;gap:0.5rem;}
+.tc-features li:last-child{border-bottom:none;}
+.tc-features li::before{content:'▸';color:var(--red);font-size:0.6rem;}
+.tc-check{position:absolute;bottom:1rem;right:1rem;width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;display:none;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;}
+.tcard.checked .tc-check{display:flex;}
+input[type=radio]{display:none;}
+{% if error %}.error-shown{display:block;}{% endif %}
+</style>
+<script>
+function pickTicket(el, val) {
+  document.querySelectorAll('.tcard').forEach(c => c.classList.remove('checked'));
+  el.classList.add('checked');
+  document.getElementById('chosen-ticket').value = val;
+}
+</script>
+{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="park-strip">
+    <div>
+      <div style="font-size:0.65rem;opacity:0.7;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:0.2rem">Destination</div>
+      <strong>{{ park.icon }} {{ park.name }}</strong>
+    </div>
+    <div class="dist">📍 {{ "{:,}".format(park.dist) }} miles away &nbsp;·&nbsp; 🚗 {{ park.drive }}</div>
+  </div>
+
+  <div class="eyebrow">{{ park.name }}</div>
+  <div class="page-title">CHOOSE YOUR<br>TICKET</div>
+  <div class="red-bar"></div>
+  {% if error %}<div class="error-box">{{ error }}</div>{% endif %}
+
+  <form method="POST" action="/tickets">
+    <input type="hidden" name="ticket" id="chosen-ticket" value="">
+    <div class="ticket-grid">
+      {% for t in tickets %}
+      <div class="tcard" onclick="pickTicket(this, '{{ t.name }}')">
+        {% if loop.index == 2 %}<div class="tc-popular">Best Value</div>{% endif %}
+        <div class="tc-ribbon"></div>
+        <div class="tc-body">
+          <div class="tc-name">{{ t.name }}</div>
+          <div class="tc-price"><sup>$</sup>{{ "{:.0f}".format(t.price) }}<span style="font-size:1.2rem">.{{ "%02d"|format((t.price % 1 * 100)|int) }}</span></div>
+          <div class="tc-note">{{ t.note }}</div>
+          <ul class="tc-features">
+            {% for f in t.features %}<li>{{ f }}</li>{% endfor %}
+          </ul>
+        </div>
+        <div class="tc-check">✓</div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="nav-row">
+      <a href="/parks" class="btn-ghost">← Back</a>
+      <button type="submit" class="btn-red">Enter Your Details →</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

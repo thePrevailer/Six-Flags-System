@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% set step = 4 %}
+{% block head %}
+<style>
+.order-strip{background:var(--gray-bg);border:1.5px solid var(--gray-line);border-radius:8px;padding:1rem 1.4rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;font-size:0.88rem;color:#555;}
+.order-strip strong{color:var(--black);font-weight:700;}
+.order-strip .price{font-family:'Bebas Neue',cursive;font-size:1.4rem;color:var(--red);letter-spacing:0.05em;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;}
+.fg{display:flex;flex-direction:column;gap:0.4rem;}
+.fg.full{grid-column:1/-1;}
+label{font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--red);}
+input[type=text],input[type=tel],input[type=date],input[type=email]{background:#fff;border:1.5px solid var(--gray-line);border-radius:5px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.95rem;padding:0.75rem 1rem;outline:none;transition:border-color 0.2s;width:100%;}
+input:focus{border-color:var(--red);}
+input[readonly]{background:var(--gray-bg);color:var(--gray-text);}
+.student-toggle{display:flex;background:var(--gray-bg);border:1.5px solid var(--gray-line);border-radius:5px;overflow:hidden;margin-top:0.4rem;}
+.st-opt{flex:1;text-align:center;padding:0.75rem;cursor:pointer;font-size:0.88rem;font-weight:600;color:var(--gray-text);border:none;background:transparent;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.st-opt.active{background:var(--red);color:#fff;}
+.school-row{display:none;margin-top:1rem;}
+.school-row.show{display:flex;}
+.disc-strip{background:var(--red-pale);border:1.5px solid rgba(227,24,55,0.2);border-radius:8px;padding:1rem 1.2rem;display:none;align-items:center;gap:0.8rem;margin-top:1rem;font-size:0.88rem;color:var(--red-dark);}
+.disc-strip.show{display:flex;}
+.disc-strip strong{font-weight:700;}
+.sect-label{font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--gray-text);margin:1.5rem 0 0.5rem;display:block;}
+</style>
+<script>
+var isStudent = false;
+function setStudent(val) {
+  isStudent = val;
+  document.getElementById('st-no').classList.toggle('active', !val);
+  document.getElementById('st-yes').classList.toggle('active', val);
+  document.getElementById('st-val').value = val ? 'yes' : 'no';
+  document.getElementById('school-row').classList.toggle('show', val);
+  document.getElementById('disc-strip').classList.toggle('show', val);
+}
+</script>
+{% endblock %}
+{% block content %}
+<div class="wrap" style="max-width:680px">
+  <div class="order-strip">
+    <div>{{ park.icon }} <strong>{{ park.name }}</strong> &nbsp;·&nbsp; {{ ticket.name }}</div>
+    <div class="price">${{ "%.2f"|format(ticket.price) }}</div>
+  </div>
+
+  <div class="eyebrow">Almost There</div>
+  <div class="page-title">YOUR DETAILS</div>
+  <div class="red-bar"></div>
+  {% if error %}<div class="error-box">{{ error }}</div>{% endif %}
+
+  <form method="POST" action="/details">
+    <input type="hidden" name="student" id="st-val" value="no">
+    <div class="form-grid">
+      <div class="fg"><label>First Name</label><input type="text" name="first_name" placeholder="Jordan" required></div>
+      <div class="fg"><label>Last Name</label><input type="text" name="last_name" placeholder="Smith" required></div>
+      <div class="fg"><label>Email</label><input type="email" name="email" placeholder="jordan@email.com" required></div>
+      <div class="fg"><label>Phone Number</label><input type="tel" name="phone" placeholder="(555) 123-4567" required></div>
+      <div class="fg"><label>Date of Birth</label><input type="date" name="dob" required></div>
+      <div class="fg"><label>Your Location</label><input type="text" value="{{ location }}" readonly></div>
+    </div>
+
+    <span class="sect-label">Are You a Student?</span>
+    <div class="student-toggle">
+      <button type="button" class="st-opt active" id="st-no" onclick="setStudent(false)">No</button>
+      <button type="button" class="st-opt" id="st-yes" onclick="setStudent(true)">Yes — I'm a Student</button>
+    </div>
+
+    <div class="fg full school-row" id="school-row">
+      <label>School / University Name</label>
+      <input type="text" name="school" id="school-input" placeholder="e.g. Grambling State University">
+    </div>
+
+    <div class="disc-strip" id="disc-strip">
+      <span style="font-size:1.2rem">🎓</span>
+      <div><strong>Student Discount Applied!</strong> You save 20% — ticket drops to <strong>${{ "%.2f"|format(ticket.price * 0.80) }}</strong>.</div>
+    </div>
+
+    <div class="nav-row">
+      <a href="/tickets" class="btn-ghost">← Back</a>
+      <button type="submit" class="btn-red">Generate My Ticket →</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

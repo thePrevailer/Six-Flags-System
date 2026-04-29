@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% set step = 2 %}
+{% block head %}
+<style>
+.banner{background:var(--red);color:#fff;border-radius:8px;padding:0.85rem 1.2rem;display:flex;align-items:center;gap:0.8rem;margin-bottom:1.4rem;font-size:0.88rem;}
+.banner strong{font-weight:700;}
+.park-list{display:flex;flex-direction:column;gap:0.9rem;margin-bottom:2rem;}
+.park-opt{background:#fff;border:2px solid var(--gray-line);border-radius:10px;padding:1.2rem 1.4rem;cursor:pointer;transition:all 0.22s;display:grid;grid-template-columns:40px 1fr auto;gap:1rem;align-items:center;position:relative;overflow:hidden;}
+.park-opt::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--red);transform:scaleY(0);transition:transform 0.22s;transform-origin:center;}
+.park-opt:hover{border-color:rgba(227,24,55,0.4);box-shadow:0 4px 16px rgba(227,24,55,0.1);}
+.park-opt:hover::before,.park-opt.checked::before{transform:scaleY(1);}
+input[type=radio]{display:none;}
+.park-opt.checked{border-color:var(--red);background:var(--red-pale);}
+.rank{width:36px;height:36px;border-radius:50%;background:var(--gray-bg);border:1.5px solid var(--gray-line);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:1.1rem;color:var(--gray-text);transition:all 0.2s;flex-shrink:0;}
+.park-opt.checked .rank,.park-opt:hover .rank{background:var(--red);border-color:var(--red);color:#fff;}
+.first-rank{background:var(--red)!important;border-color:var(--red)!important;color:#fff!important;}
+.pinfo{}
+.pname{font-family:'Bebas Neue',cursive;font-size:1.35rem;letter-spacing:0.04em;color:var(--black);line-height:1;margin-bottom:0.1rem;}
+.pcity{font-size:0.8rem;color:var(--gray-text);}
+.ptags{display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.4rem;}
+.ptag{font-size:0.65rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:0.15rem 0.55rem;border-radius:20px;background:var(--gray-bg);color:var(--gray-text);border:1px solid var(--gray-line);}
+.ptag.red{background:var(--red-pale);color:var(--red-dark);border-color:rgba(227,24,55,0.2);}
+.pright{text-align:right;flex-shrink:0;}
+.dist-num{font-family:'Bebas Neue',cursive;font-size:2rem;color:var(--black);line-height:1;letter-spacing:0.02em;}
+.park-opt.checked .dist-num{color:var(--red);}
+.dist-unit{font-size:0.62rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--gray-text);}
+.drive{font-size:0.72rem;color:var(--gray-text);margin-top:0.2rem;}
+@media(max-width:600px){.park-opt{grid-template-columns:36px 1fr;}.pright{display:none;}}
+</style>
+<script>
+function pickPark(el, val) {
+  document.querySelectorAll('.park-opt').forEach(o => o.classList.remove('checked'));
+  el.classList.add('checked');
+  document.getElementById('chosen-park').value = val;
+}
+</script>
+{% endblock %}
+{% block content %}
+<div class="wrap">
+  <div class="eyebrow">Six Flags Parks Near {{ location }}</div>
+  <div class="page-title">CHOOSE<br>YOUR PARK</div>
+  <div class="red-bar"></div>
+
+  <div class="banner">
+    <span>📍</span>
+    <div>All 11 U.S. Six Flags parks sorted by distance from <strong>{{ location }}</strong>. Select the one you want to visit.</div>
+  </div>
+
+  <form method="POST" action="/parks">
+    <input type="hidden" name="park" id="chosen-park" value="{{ parks[0].name }}">
+    <div class="park-list">
+      {% for p in parks %}
+      <div class="park-opt {% if loop.index == 1 %}checked{% endif %}" onclick="pickPark(this, '{{ p.name }}')">
+        <div class="rank {% if loop.index == 1 %}first-rank{% endif %}">{{ loop.index }}</div>
+        <div class="pinfo">
+          <div class="pname">{{ p.icon }} {{ p.name }}</div>
+          <div class="pcity">{{ p.city }}</div>
+          <div class="ptags">
+            {% if loop.index == 1 %}<span class="ptag red">⭐ Closest</span>{% endif %}
+            {% for tag in p.tags %}<span class="ptag">{{ tag }}</span>{% endfor %}
+          </div>
+        </div>
+        <div class="pright">
+          <div class="dist-num">{{ "{:,}".format(p.dist) }}</div>
+          <div class="dist-unit">miles away</div>
+          <div class="drive">🚗 {{ p.drive }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="nav-row">
+      <a href="/location" class="btn-ghost">← Change Location</a>
+      <button type="submit" class="btn-red">See Tickets →</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

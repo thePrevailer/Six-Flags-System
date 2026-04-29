@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Six Flags Ticket Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--red:#E31837;--red-dark:#AA1128;--red-deeper:#7A0A1B;--red-pale:#FFF0F2;--black:#111;--white:#fff;--gray-bg:#F7F7F7;--gray-line:#E5E5E5;--gray-text:#888;--text:#1A1A1A;}
+body{font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);min-height:100vh;}
+.site-header{background:var(--red);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:99;box-shadow:0 2px 12px rgba(227,24,55,0.3);}
+.logo-text{font-family:'Bebas Neue',cursive;font-size:2rem;letter-spacing:0.04em;color:#fff;}
+.logo-text span{color:#FFD700;}
+.step-pills{display:flex;align-items:center;gap:6px;}
+.pill{display:flex;align-items:center;gap:5px;font-size:0.7rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.4);text-decoration:none;}
+.pill.active{color:#FFD700;}
+.pill.done{color:rgba(255,255,255,0.8);}
+.pill-num{width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:0.65rem;}
+.pill.active .pill-num{background:#FFD700;border-color:#FFD700;color:var(--red-dark);}
+.pill.done .pill-num{background:rgba(255,255,255,0.3);}
+.pill-sep{width:18px;height:1px;background:rgba(255,255,255,0.2);}
+.wrap{max-width:880px;margin:0 auto;padding:3rem 2rem 4rem;}
+.eyebrow{font-size:0.72rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--red);margin-bottom:0.5rem;}
+.page-title{font-family:'Bebas Neue',cursive;font-size:clamp(2.2rem,5vw,3.5rem);color:var(--black);letter-spacing:0.03em;line-height:1;margin-bottom:0.5rem;}
+.red-bar{width:48px;height:4px;background:var(--red);margin:1rem 0 1.8rem;border-radius:2px;}
+.btn-red{background:var(--red);color:#fff;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:0.95rem 2.5rem;border-radius:5px;transition:all 0.2s;display:inline-block;text-decoration:none;}
+.btn-red:hover{background:var(--red-dark);transform:translateY(-2px);box-shadow:0 6px 20px rgba(227,24,55,0.35);}
+.btn-ghost{background:transparent;color:var(--gray-text);border:1.5px solid var(--gray-line);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;padding:0.9rem 2rem;border-radius:5px;transition:all 0.2s;display:inline-block;text-decoration:none;}
+.btn-ghost:hover{border-color:#AAA;color:var(--text);}
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:2rem;gap:1rem;flex-wrap:wrap;}
+.error-box{background:#fff0f0;border:1.5px solid rgba(227,24,55,0.3);border-radius:6px;padding:0.85rem 1.2rem;color:var(--red-dark);font-size:0.88rem;margin-bottom:1.5rem;}
+@media(max-width:600px){.step-pills .pill span{display:none;}.site-header{padding:0 1rem;}}
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+<header class="site-header">
+  <div class="logo-text">SIX <span>FLAGS</span></div>
+  <nav class="step-pills">
+    <a href="/location" class="pill {% if step >= 1 %}{% if step == 1 %}active{% else %}done{% endif %}{% endif %}">
+      <div class="pill-num">1</div><span>Location</span>
+    </a>
+    <div class="pill-sep"></div>
+    <a href="/parks" class="pill {% if step >= 2 %}{% if step == 2 %}active{% else %}done{% endif %}{% endif %}">
+      <div class="pill-num">2</div><span>Choose Park</span>
+    </a>
+    <div class="pill-sep"></div>
+    <a href="/tickets" class="pill {% if step >= 3 %}{% if step == 3 %}active{% else %}done{% endif %}{% endif %}">
+      <div class="pill-num">3</div><span>Tickets</span>
+    </a>
+    <div class="pill-sep"></div>
+    <a href="/details" class="pill {% if step >= 4 %}{% if step == 4 %}active{% else %}done{% endif %}{% endif %}">
+      <div class="pill-num">4</div><span>Details</span>
+    </a>
+    <div class="pill-sep"></div>
+    <a href="/confirmation" class="pill {% if step == 5 %}active{% endif %}">
+      <div class="pill-num">5</div><span>Your Ticket</span>
+    </a>
+  </nav>
+</header>
+{% block content %}{% endblock %}
+</body>
+</html>
