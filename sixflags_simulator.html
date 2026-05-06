@@ -242,6 +242,16 @@ body {
 }
 .btn-red:hover { background: var(--red-dark); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(227,24,55,0.35); }
 .btn-red:active { transform: translateY(0); }
+.btn-shop {
+  background: #FFD700; color: #7A0A1B;
+  border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem; font-weight: 800;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 0.95rem 2rem; border-radius: 5px;
+  transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem;
+}
+.btn-shop:hover { background: #FFC300; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,195,0,0.4); }
 .btn-ghost {
   background: transparent; color: var(--gray-text);
   border: 1.5px solid var(--gray-line); cursor: pointer;
@@ -514,6 +524,8 @@ input.err { border-color: #cc0000; background: #fff8f8; }
     <div class="pill" id="p4"><div class="pill-num">4</div><span>Details</span></div>
     <div class="pill-sep"></div>
     <div class="pill" id="p5"><div class="pill-num">5</div><span>Your Ticket</span></div>
+    <div class="pill-sep"></div>
+    <div class="pill" id="p6"><div class="pill-num">6</div><span>Gift Shop</span></div>
   </div>
 </header>
 
@@ -791,6 +803,7 @@ input.err { border-color: #cc0000; background: #fff8f8; }
 
     <div class="ticket-actions">
       <button class="btn-red" onclick="downloadCSV()">⬇ Download CSV Receipt</button>
+      <button class="btn-shop" onclick="goTo('giftshop')">🛍️ Visit the Gift Shop</button>
       <button class="btn-ghost" onclick="resetAll()">Book Another Ticket</button>
     </div>
   </div>
@@ -886,6 +899,7 @@ function goTo(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (page === 'giftshop') { gsInit(); }
   updateSteps(page);
 }
 
@@ -1124,5 +1138,260 @@ function resetAll() {
 document.getElementById('loc-input').addEventListener('keydown', e => { if (e.key === 'Enter') findPark(); });
 document.querySelectorAll('input').forEach(i => i.addEventListener('input', () => i.classList.remove('err')));
 </script>
+
+<!-- ═══════ PAGE: GIFT SHOP ═══════ -->
+<div class="page" id="page-giftshop">
+  <!-- Hero banner -->
+  <div style="background:var(--red);padding:2rem 2rem 2.4rem;text-align:center;position:relative;overflow:hidden;">
+    <div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-family:'Bebas Neue',cursive;font-size:7rem;color:rgba(0,0,0,0.1);letter-spacing:0.08em;white-space:nowrap;pointer-events:none;">GIFT SHOP</div>
+    <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;color:#FFD700;margin-bottom:0.4rem;position:relative;" id="gs-eyebrow">🎢 Official Park</div>
+    <div style="font-family:'Bebas Neue',cursive;font-size:3.5rem;color:#fff;letter-spacing:0.05em;line-height:1;position:relative;">🛍️ Gift Shop</div>
+    <div style="font-size:0.9rem;color:rgba(255,255,255,0.75);max-width:440px;margin:0.4rem auto 1rem;position:relative;">Exclusive souvenirs, apparel &amp; collectibles. Bring a piece of Six Flags home!</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:1rem;flex-wrap:wrap;position:relative;">
+      <span style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:20px;padding:0.3rem 0.9rem;font-size:0.75rem;color:rgba(255,255,255,0.9);">Store ID: SF-GS-712</span>
+      <span style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:20px;padding:0.3rem 0.9rem;font-size:0.75rem;color:rgba(255,255,255,0.9);">12 Items Available</span>
+      <span style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:20px;padding:0.3rem 0.9rem;font-size:0.75rem;color:rgba(255,255,255,0.9);">Tax: 8%</span>
+    </div>
+  </div>
+
+  <a href="#" onclick="goTo('ticket');return false;" style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.82rem;color:#888;text-decoration:none;margin:1rem 0 0 1.5rem;">← Back to My Ticket</a>
+
+  <div style="max-width:1100px;margin:0 auto;padding:1.5rem;display:grid;grid-template-columns:1fr 300px;gap:2rem;" id="gs-layout">
+    <!-- Products -->
+    <div>
+      <!-- Filter bar -->
+      <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-bottom:1.4rem;" id="gs-filters"></div>
+      <!-- Grid -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:1rem;" id="gs-grid"></div>
+    </div>
+
+    <!-- Cart sidebar -->
+    <div id="gs-cart-wrap" style="position:sticky;top:80px;height:fit-content;">
+      <div style="background:#fff;border:1.5px solid #E5E5E5;border-radius:12px;overflow:hidden;">
+        <div style="background:var(--red);color:#fff;padding:1rem 1.3rem;display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-family:'Bebas Neue',cursive;font-size:1.3rem;letter-spacing:0.06em;">🛒 Your Cart</div>
+          <div id="gs-cart-count" style="background:#FFD700;color:#7A0A1B;font-size:0.7rem;font-weight:800;padding:0.2rem 0.6rem;border-radius:20px;">0 items</div>
+        </div>
+        <div id="gs-cart-empty" style="padding:2rem 1.3rem;text-align:center;color:#888;font-size:0.88rem;">
+          <div style="font-size:2.5rem;opacity:0.4;margin-bottom:0.5rem;">🛍️</div>
+          <div>Your cart is empty.<br>Add something!</div>
+        </div>
+        <div id="gs-cart-items" style="display:none;max-height:260px;overflow-y:auto;"></div>
+        <div id="gs-invoice" style="display:none;padding:1rem 1.2rem;border-top:1px solid #E5E5E5;">
+          <div id="gs-inv-rows"></div>
+          <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:#888;padding:0.3rem 0;">
+            <span>Tax (8%)</span><span id="gs-tax">$0.00</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:1.05rem;font-weight:700;padding:0.75rem 0 0;margin-top:0.4rem;border-top:2px solid #E5E5E5;">
+            <span>Total</span><span id="gs-total" style="color:var(--red);">$0.00</span>
+          </div>
+        </div>
+        <div style="padding:1rem 1.2rem;display:flex;flex-direction:column;gap:0.65rem;">
+          <div id="gs-savings" style="display:none;background:#FFF9E6;border:1px solid #FFD700;border-radius:6px;padding:0.6rem 0.9rem;font-size:0.78rem;color:#7A4F00;">
+            💡 <span id="gs-savings-text"></span>
+          </div>
+          <button id="gs-csv-btn" onclick="gsDownloadCSV()" disabled
+            style="background:var(--red);color:#fff;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:0.9rem;border-radius:6px;transition:all 0.2s;width:100%;">
+            ⬇ Download Receipt CSV
+          </button>
+          <button onclick="goTo('location')" style="background:transparent;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:#888;padding:0.4rem;text-align:center;width:100%;">
+            Skip &amp; Book Another Ticket
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.gs-pcard{background:#fff;border:1.5px solid #E5E5E5;border-radius:12px;overflow:hidden;transition:all 0.22s;cursor:default;display:flex;flex-direction:column;position:relative;}
+.gs-pcard:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,0.09);border-color:rgba(227,24,55,0.3);}
+.gs-pcard.incart{border-color:var(--red);box-shadow:0 0 0 2px rgba(227,24,55,0.18);}
+.gs-filter-btn{background:#fff;border:1.5px solid #E5E5E5;border-radius:20px;padding:0.35rem 1rem;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.18s;color:#888;}
+.gs-filter-btn:hover{border-color:var(--red);color:var(--red);}
+.gs-filter-btn.active{background:var(--red);border-color:var(--red);color:#fff;}
+@media(max-width:700px){#gs-layout{grid-template-columns:1fr;}#gs-cart-wrap{position:static;}}
+</style>
+
+<script>
+// ── GIFT SHOP DATA (mirrors gift_shop.py inventory dict + store_config tuple) ──
+var GS_STORE_CONFIG = [0.08, 'SF-GS-712'];  // tuple: (tax_rate, store_id)
+var GS_INVENTORY = [
+  {name:"Custom Keychain",     price:5.00,  emoji:"🔑", cat:"Accessories", desc:"Personalized Six Flags keychain with park logo.",               tag:""},
+  {name:"Souvenir Shirt",      price:18.00, emoji:"👕", cat:"Apparel",     desc:"Premium cotton tee with iconic Six Flags branding.",           tag:"Popular"},
+  {name:"Local Honey",         price:12.50, emoji:"🍯", cat:"Food",        desc:"Pure wildflower honey sourced near the park.",                  tag:""},
+  {name:"Postcard",            price:2.00,  emoji:"📮", cat:"Stationery",  desc:"Set of 4 glossy park postcards — perfect to send home.",        tag:""},
+  {name:"Six Flags Cap",       price:25.00, emoji:"🧢", cat:"Apparel",     desc:"Adjustable snapback cap with embroidered Six Flags logo.",      tag:"New"},
+  {name:"Roller Coaster Mug",  price:14.00, emoji:"☕", cat:"Drinkware",   desc:"Ceramic mug with illustrated coaster art. 12 oz.",             tag:""},
+  {name:"Park Water Bottle",   price:22.00, emoji:"💧", cat:"Drinkware",   desc:"Stainless steel insulated bottle, keeps drinks cold 24h.",     tag:"Popular"},
+  {name:"Plush Mascot Toy",    price:20.00, emoji:"🧸", cat:"Toys",        desc:"Soft Six Flags Tweety plush — great for kids!",                tag:""},
+  {name:"Commemorative Pin",   price:8.00,  emoji:"📌", cat:"Collectibles",desc:"Enamel collector pin with this season's park artwork.",        tag:"Limited"},
+  {name:"Photo Frame",         price:15.00, emoji:"🖼️", cat:"Home",        desc:"Rustic wood frame pre-printed with Six Flags art. 4×6.",       tag:""},
+  {name:"Candy Gift Box",      price:10.00, emoji:"🍬", cat:"Food",        desc:"Assorted park-exclusive candies in a collectible tin.",        tag:""},
+  {name:"Fridge Magnet Set",   price:6.00,  emoji:"🧲", cat:"Collectibles",desc:"Set of 3 colorful park magnets — one per coaster theme.",     tag:""},
+];
+var gsCart = {};   // dict: name → {qty, price, emoji}
+var gsCurrentCat = 'all';
+
+function gsInit() {
+  // Update eyebrow with park name
+  if (S.park) document.getElementById('gs-eyebrow').textContent = S.park.icon + ' ' + S.park.name;
+  gsBuildFilters();
+  gsBuildGrid();
+}
+
+function gsBuildFilters() {
+  var cats = ['all', ...new Set(GS_INVENTORY.map(i => i.cat))];
+  var bar = document.getElementById('gs-filters');
+  bar.innerHTML = '';
+  cats.forEach(function(cat) {
+    var btn = document.createElement('button');
+    btn.className = 'gs-filter-btn' + (cat==='all'?' active':'');
+    btn.textContent = cat === 'all' ? 'All Items' : cat;
+    btn.onclick = function() {
+      document.querySelectorAll('.gs-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      gsCurrentCat = cat;
+      gsBuildGrid();
+    };
+    bar.appendChild(btn);
+  });
+}
+
+function gsBuildGrid() {
+  var grid = document.getElementById('gs-grid');
+  grid.innerHTML = '';
+  GS_INVENTORY.filter(function(item) {
+    return gsCurrentCat === 'all' || item.cat === gsCurrentCat;
+  }).forEach(function(item) {
+    var qty = gsCart[item.name] ? gsCart[item.name].qty : 0;
+    var tagHtml = '';
+    if (item.tag) {
+      var tClass = item.tag==='Popular'?'background:#FFD700;color:#7A0A1B':item.tag==='New'?'background:#E31837;color:#fff':'background:#1A1A1A;color:#FFD700';
+      tagHtml = '<span style="position:absolute;top:10px;right:10px;font-size:0.6rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:0.18rem 0.55rem;border-radius:20px;'+tClass+'">'+item.tag+'</span>';
+    }
+    var div = document.createElement('div');
+    div.className = 'gs-pcard' + (qty>0?' incart':'');
+    div.id = 'gsc-' + item.name.replace(/\s+/g,'_');
+    div.innerHTML =
+      tagHtml +
+      '<div style="background:'+(qty>0?'#FFF0F2':'#FFF5F5')+';height:110px;display:flex;align-items:center;justify-content:center;font-size:3.2rem;border-bottom:1px solid #E5E5E5;">'+item.emoji+'</div>'+
+      '<div style="padding:1rem;flex:1;display:flex;flex-direction:column;">'+
+        '<div style="font-size:0.62rem;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--red);margin-bottom:0.2rem;">'+item.cat+'</div>'+
+        '<div style="font-weight:700;font-size:0.95rem;color:#111;margin-bottom:0.3rem;line-height:1.25;">'+item.name+'</div>'+
+        '<div style="font-size:0.78rem;color:#888;line-height:1.5;flex:1;">'+item.desc+'</div>'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.9rem;padding-top:0.75rem;border-top:1px solid #E5E5E5;">'+
+          '<span style="font-family:'Bebas Neue',cursive;font-size:1.5rem;color:var(--red);">$'+item.price.toFixed(2)+'</span>'+
+          '<div style="display:flex;align-items:center;gap:6px;">'+
+            '<button onclick="gsChangeQty(''+item.name+'',-1)" style="width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;background:#f0f0f0;color:#666;font-size:1.1rem;display:'+(qty>0?'flex':'none')+';align-items:center;justify-content:center;transition:all 0.15s;" id="gsrm-'+item.name.replace(/\s+/g,'_')+'">−</button>'+
+            '<span style="font-size:0.82rem;font-weight:700;min-width:18px;text-align:center;" id="gsqty-'+item.name.replace(/\s+/g,'_')+'">'+qty+'</span>'+
+            '<button onclick="gsChangeQty(''+item.name+'',1)" style="width:30px;height:30px;border-radius:50%;background:var(--red);color:#fff;border:none;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;">+</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    grid.appendChild(div);
+  });
+}
+
+function gsChangeQty(name, delta) {
+  var item = GS_INVENTORY.find(i => i.name === name);
+  if (!item) return;
+  if (!gsCart[name]) gsCart[name] = {qty:0, price:item.price, emoji:item.emoji};
+  gsCart[name].qty = Math.max(0, gsCart[name].qty + delta);
+  if (gsCart[name].qty === 0) delete gsCart[name];
+  gsBuildGrid();
+  gsRenderCart();
+}
+
+function gsRenderCart() {
+  var names = Object.keys(gsCart);
+  var count = names.reduce(function(s,n){ return s + gsCart[n].qty; }, 0);
+  document.getElementById('gs-cart-count').textContent = count + (count===1?' item':' items');
+  var emptyEl  = document.getElementById('gs-cart-empty');
+  var itemsEl  = document.getElementById('gs-cart-items');
+  var invEl    = document.getElementById('gs-invoice');
+  var csvBtn   = document.getElementById('gs-csv-btn');
+  var savingsEl = document.getElementById('gs-savings');
+  if (count === 0) {
+    emptyEl.style.display = 'block'; itemsEl.style.display = 'none';
+    invEl.style.display = 'none'; csvBtn.disabled = true; csvBtn.style.background='#ccc'; csvBtn.style.cursor='not-allowed';
+    savingsEl.style.display = 'none'; return;
+  }
+  emptyEl.style.display = 'none'; itemsEl.style.display = 'block';
+  invEl.style.display = 'block'; csvBtn.disabled = false; csvBtn.style.background='var(--red)'; csvBtn.style.cursor='pointer';
+  // Render items
+  itemsEl.innerHTML = '';
+  var subtotal = 0;
+  names.forEach(function(name) {
+    var item = gsCart[name];
+    var lineTotal = item.price * item.qty;
+    subtotal += lineTotal;
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:0.7rem;padding:0.55rem 1.2rem;border-bottom:1px solid #f5f5f5;font-size:0.84rem;';
+    row.innerHTML =
+      '<span style="font-size:1.3rem;flex-shrink:0;">'+item.emoji+'</span>'+
+      '<div style="flex:1;"><div style="font-weight:600;color:#111;line-height:1.2;">'+name+(item.qty>1?' ×'+item.qty:'')+'</div>'+
+      '<div style="color:var(--red);font-weight:700;font-size:0.82rem;">$'+lineTotal.toFixed(2)+'</div></div>'+
+      '<button onclick="gsChangeQty(''+name+'',-'+item.qty+')" style="width:22px;height:22px;border-radius:50%;background:#f5f5f5;border:none;cursor:pointer;color:#888;font-size:0.7rem;display:flex;align-items:center;justify-content:center;">✕</button>';
+    itemsEl.appendChild(row);
+  });
+  // Invoice rows
+  var invRows = document.getElementById('gs-inv-rows');
+  invRows.innerHTML = '';
+  names.forEach(function(name) {
+    var item = gsCart[name];
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;justify-content:space-between;font-size:0.84rem;color:#555;padding:0.3rem 0;';
+    row.innerHTML = '<span>'+(item.qty>1?name+' ×'+item.qty:name)+'</span><span>$'+(item.price*item.qty).toFixed(2)+'</span>';
+    invRows.appendChild(row);
+  });
+  var tax = subtotal * GS_STORE_CONFIG[0];
+  var total = subtotal + tax;
+  document.getElementById('gs-tax').textContent   = '$'+tax.toFixed(2);
+  document.getElementById('gs-total').textContent = '$'+total.toFixed(2);
+  // Savings hint
+  var diff = (30 - subtotal).toFixed(2);
+  savingsEl.style.display = 'flex';
+  document.getElementById('gs-savings-text').textContent = subtotal >= 30
+    ? 'Great haul! You're spending $'+subtotal.toFixed(2)+' today.'
+    : 'Add $'+diff+' more to hit $30 in souvenirs!';
+}
+
+function gsDownloadCSV() {
+  var names = Object.keys(gsCart);
+  if (!names.length) return;
+  var TAX_RATE = GS_STORE_CONFIG[0];
+  var STORE_ID = GS_STORE_CONFIG[1];
+  var rows = [
+    ['Six Flags Gift Shop Receipt',''],
+    ['Store ID', STORE_ID],
+    ['Park', S.park ? S.park.name : 'N/A'],
+    ['Customer', S.user.name || 'Guest'],
+    ['Ticket ID', S.ticketId || 'N/A'],
+    ['Purchase Date', new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})],
+    ['',''],
+    ['Item','Price'],
+  ];
+  // List .pop(0) logic — mirrors gift_shop.py process_checkout
+  var cartArr = [];
+  names.forEach(n => { for(var i=0;i<gsCart[n].qty;i++) cartArr.push(n); });
+  var subtotal = 0;
+  while (cartArr.length > 0) {
+    var item = cartArr.shift();  // shift() = .pop(0) equivalent in JS
+    var price = GS_INVENTORY.find(i=>i.name===item).price;
+    subtotal += price;
+    rows.push([item, '$'+price.toFixed(2)]);
+  }
+  var tax = subtotal * TAX_RATE;
+  var total = subtotal + tax;
+  rows.push(['',''],['Subtotal','$'+subtotal.toFixed(2)],['Tax ('+Math.round(TAX_RATE*100)+'%)','$'+tax.toFixed(2)],['TOTAL','$'+total.toFixed(2)],['',''],['Thank you for your visit!','']);
+  var csv = rows.map(r => r.map(c => '"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'SixFlags_GiftShop_' + (S.ticketId||'receipt') + '.csv';
+  a.click();
+}
+</script>
+
 </body>
 </html>

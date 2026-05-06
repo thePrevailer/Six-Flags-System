@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect, url_for, send_file
+from flask import Flask, render_template, request, session, redirect, url_for, send_file, jsonify
 import csv, io, math, random, string, requests
 from datetime import datetime
 
@@ -7,17 +7,17 @@ app.secret_key = 'sixflags-secret-key-2024'
 
 # ── PARK DATA ──────────────────────────────────────────────────────────────────
 PARKS = [
-    {"name": "Six Flags Over Texas",        "city": "Arlington, TX",       "icon": "🤠", "lat": 32.7573,  "lng": -97.0706,  "rides": 45, "coasters": 13, "desc": "The original Six Flags since 1961 — Titan, Mr. Freeze, Batman: The Ride.",           "tags": ["Thrills", "Coasters", "Family"]},
-    {"name": "Six Flags Fiesta Texas",       "city": "San Antonio, TX",     "icon": "🌮", "lat": 29.6037,  "lng": -98.6116,  "rides": 40, "coasters": 8,  "desc": "Nestled in a limestone quarry — home of Wonder Woman Golden Lasso Coaster.",       "tags": ["Thrills", "Shows", "Water Park"]},
-    {"name": "Six Flags Over Georgia",       "city": "Austell, GA",         "icon": "🍑", "lat": 33.8124,  "lng": -84.5480,  "rides": 43, "coasters": 11, "desc": "The South's top thrill park with Twisted Cyclone and Goliath.",                      "tags": ["Coasters", "Family", "Halloween"]},
-    {"name": "Six Flags Great Adventure",    "city": "Jackson, NJ",         "icon": "🗽", "lat": 40.1370,  "lng": -74.4336,  "rides": 48, "coasters": 14, "desc": "Kingda Ka — the world's tallest coaster — plus a 2,200-acre safari.",              "tags": ["World Records", "Safari", "Flagship"]},
-    {"name": "Six Flags Magic Mountain",     "city": "Valencia, CA",        "icon": "🌅", "lat": 34.4253,  "lng": -118.5973, "rides": 50, "coasters": 20, "desc": "The Thrill Capital of the World™ with a record-breaking 20 coasters.",              "tags": ["Most Coasters", "Thrills", "LA"]},
-    {"name": "Six Flags Great America",      "city": "Gurnee, IL",          "icon": "🌽", "lat": 42.3703,  "lng": -87.9373,  "rides": 44, "coasters": 13, "desc": "Home of Goliath — world's fastest, tallest, steepest wooden coaster.",              "tags": ["Midwest", "Coasters", "Fright Fest"]},
-    {"name": "Six Flags New England",        "city": "Agawam, MA",          "icon": "🍂", "lat": 42.0709,  "lng": -72.6157,  "rides": 36, "coasters": 12, "desc": "Superman: The Ride and Wicked Cyclone on the Connecticut River.",                    "tags": ["New England", "Coasters", "Halloween"]},
-    {"name": "Six Flags America",            "city": "Largo, MD",           "icon": "🏛️", "lat": 38.8823,  "lng": -76.8369,  "rides": 32, "coasters": 9,  "desc": "The DC metro's Six Flags with Superman: Ride of Steel and Water Park.",             "tags": ["DC Area", "Family", "Water Park"]},
-    {"name": "Six Flags Discovery Kingdom", "city": "Vallejo, CA",          "icon": "🦁", "lat": 38.1468,  "lng": -122.2533, "rides": 40, "coasters": 7,  "desc": "Where coasters meet wildlife — marine shows and safari 30 min from SF.",           "tags": ["Bay Area", "Animals", "Family"]},
-    {"name": "Six Flags St. Louis",          "city": "Eureka, MO",          "icon": "🌉", "lat": 38.5023,  "lng": -90.6274,  "rides": 40, "coasters": 10, "desc": "Missouri's thrill park since 1971 — The Boss ranked among the best woodies.",       "tags": ["Midwest", "Woodies", "Classic"]},
-    {"name": "Six Flags Hurricane Harbor",   "city": "Litchfield Park, AZ", "icon": "☀️", "lat": 33.4942,  "lng": -112.3588, "rides": 28, "coasters": 4,  "desc": "Desert thrills and water slides — the Southwest's action destination.",            "tags": ["Southwest", "Water Park", "Thrills"]},
+    {"name": "Six Flags Over Texas",        "city": "Arlington, TX",       "icon": "🤠", "lat": 32.7573,  "lng": -97.0706,  "rides": 45, "coasters": 13, "desc": "The original Six Flags since 1961 — Titan, Mr. Freeze, Batman: The Ride.",        "tags": ["Thrills", "Coasters", "Family"]},
+    {"name": "Six Flags Fiesta Texas",       "city": "San Antonio, TX",     "icon": "🌮", "lat": 29.6037,  "lng": -98.6116,  "rides": 40, "coasters": 8,  "desc": "Nestled in a limestone quarry — home of Wonder Woman Golden Lasso Coaster.",    "tags": ["Thrills", "Shows", "Water Park"]},
+    {"name": "Six Flags Over Georgia",       "city": "Austell, GA",         "icon": "🍑", "lat": 33.8124,  "lng": -84.5480,  "rides": 43, "coasters": 11, "desc": "The South's top thrill park with Twisted Cyclone and Goliath.",                   "tags": ["Coasters", "Family", "Halloween"]},
+    {"name": "Six Flags Great Adventure",    "city": "Jackson, NJ",         "icon": "🗽", "lat": 40.1370,  "lng": -74.4336,  "rides": 48, "coasters": 14, "desc": "Kingda Ka — the world's tallest coaster — plus a 2,200-acre safari.",           "tags": ["World Records", "Safari", "Flagship"]},
+    {"name": "Six Flags Magic Mountain",     "city": "Valencia, CA",        "icon": "🌅", "lat": 34.4253,  "lng": -118.5973, "rides": 50, "coasters": 20, "desc": "The Thrill Capital of the World™ with a record-breaking 20 coasters.",           "tags": ["Most Coasters", "Thrills", "LA"]},
+    {"name": "Six Flags Great America",      "city": "Gurnee, IL",          "icon": "🌽", "lat": 42.3703,  "lng": -87.9373,  "rides": 44, "coasters": 13, "desc": "Home of Goliath — world's fastest, tallest, steepest wooden coaster.",           "tags": ["Midwest", "Coasters", "Fright Fest"]},
+    {"name": "Six Flags New England",        "city": "Agawam, MA",          "icon": "🍂", "lat": 42.0709,  "lng": -72.6157,  "rides": 36, "coasters": 12, "desc": "Superman: The Ride and Wicked Cyclone on the Connecticut River.",               "tags": ["New England", "Coasters", "Halloween"]},
+    {"name": "Six Flags America",            "city": "Largo, MD",           "icon": "🏛️", "lat": 38.8823,  "lng": -76.8369,  "rides": 32, "coasters": 9,  "desc": "The DC metro's Six Flags with Superman: Ride of Steel and Water Park.",          "tags": ["DC Area", "Family", "Water Park"]},
+    {"name": "Six Flags Discovery Kingdom",  "city": "Vallejo, CA",         "icon": "🦁", "lat": 38.1468,  "lng": -122.2533, "rides": 40, "coasters": 7,  "desc": "Where coasters meet wildlife — marine shows and safari 30 min from SF.",        "tags": ["Bay Area", "Animals", "Family"]},
+    {"name": "Six Flags St. Louis",          "city": "Eureka, MO",          "icon": "🌉", "lat": 38.5023,  "lng": -90.6274,  "rides": 40, "coasters": 10, "desc": "Missouri's thrill park since 1971 — The Boss ranked among the best woodies.",    "tags": ["Midwest", "Woodies", "Classic"]},
+    {"name": "Six Flags Hurricane Harbor",   "city": "Litchfield Park, AZ", "icon": "☀️", "lat": 33.4942,  "lng": -112.3588, "rides": 28, "coasters": 4,  "desc": "Desert thrills and water slides — the Southwest's action destination.",         "tags": ["Southwest", "Water Park", "Thrills"]},
 ]
 
 TICKETS = [
@@ -26,6 +26,26 @@ TICKETS = [
     {"name": "Gold Season Pass", "price": 169.99, "note": "all-inclusive / full year",    "features": ["All Season Pass perks", "Free parking all year", "15% dining & retail off", "Flash Pass included", "Gold lounge access", "4 guest passes/year"]},
     {"name": "Platinum Pass",    "price": 229.99, "note": "VIP all-inclusive / full year","features": ["All Gold Pass perks", "Skip every line", "VIP concierge service", "20% dining & retail off", "Behind-the-scenes tour", "Unlimited guest passes"]},
 ]
+
+# ── GIFT SHOP — based on GiftShopRegister class (gift_shop.py) ─────────────────
+# Store config: (tax_rate, store_id) — tuple (immutable, mirrors store_config tuple)
+GIFT_STORE_CONFIG = (0.08, "SF-GS-712")
+
+# Inventory dictionary: item name → {price, emoji, category, description, tag}
+GIFT_INVENTORY = {
+    "Custom Keychain":      {"price": 5.00,  "emoji": "🔑", "category": "Accessories", "desc": "Personalized Six Flags keychain with park logo.", "tag": ""},
+    "Souvenir Shirt":       {"price": 18.00, "emoji": "👕", "category": "Apparel",     "desc": "Premium cotton tee with iconic Six Flags branding.", "tag": "Popular"},
+    "Local Honey":          {"price": 12.50, "emoji": "🍯", "category": "Food",        "desc": "Pure wildflower honey sourced near the park.", "tag": ""},
+    "Postcard":             {"price": 2.00,  "emoji": "📮", "category": "Stationery",  "desc": "Set of 4 glossy park postcards — perfect to send home.", "tag": ""},
+    "Six Flags Cap":        {"price": 25.00, "emoji": "🧢", "category": "Apparel",     "desc": "Adjustable snapback cap with embroidered Six Flags logo.", "tag": "New"},
+    "Roller Coaster Mug":   {"price": 14.00, "emoji": "☕", "category": "Drinkware",   "desc": "Ceramic mug with illustrated coaster art. 12 oz.", "tag": ""},
+    "Park Water Bottle":    {"price": 22.00, "emoji": "💧", "category": "Drinkware",   "desc": "Stainless steel insulated bottle, keeps drinks cold 24h.", "tag": "Popular"},
+    "Plush Mascot Toy":     {"price": 20.00, "emoji": "🧸", "category": "Toys",        "desc": "Soft Six Flags Tweety plush. Great for kids!", "tag": ""},
+    "Commemorative Pin":    {"price": 8.00,  "emoji": "📌", "category": "Collectibles","desc": "Enamel collector pin with this season's park artwork.", "tag": "Limited"},
+    "Photo Frame":          {"price": 15.00, "emoji": "🖼️", "category": "Home",        "desc": "Rustic wood frame pre-printed with Six Flags art. 4x6.", "tag": ""},
+    "Candy Gift Box":       {"price": 10.00, "emoji": "🍬", "category": "Food",        "desc": "Assorted park-exclusive candies in a collectible tin.", "tag": ""},
+    "Fridge Magnet Set":    {"price": 6.00,  "emoji": "🧲", "category": "Collectibles","desc": "Set of 3 colorful park magnets — one per coaster theme.", "tag": ""},
+}
 
 # ── HELPERS ────────────────────────────────────────────────────────────────────
 def haversine(lat1, lng1, lat2, lng2):
@@ -73,7 +93,6 @@ def location():
             if not geo:
                 error = "Could not find that location. Please try a US city or zip code."
             else:
-                # Rank parks by distance
                 ranked = []
                 for p in PARKS:
                     dist = haversine(geo["lat"], geo["lng"], p["lat"], p["lng"])
@@ -94,7 +113,7 @@ def parks():
         chosen = next((p for p in ranked if p["name"] == park_name), ranked[0])
         session["chosen_park"] = chosen
         return redirect(url_for("tickets"))
-    return render_template("parks.html", parks=ranked, location=session.get("user_location",""))
+    return render_template("parks.html", parks=ranked, location=session.get("user_location", ""))
 
 @app.route("/tickets", methods=["GET", "POST"])
 def tickets():
@@ -115,21 +134,21 @@ def details():
         return redirect(url_for("location"))
     error = None
     if request.method == "POST":
-        first   = request.form.get("first_name","").strip()
-        last    = request.form.get("last_name","").strip()
-        email   = request.form.get("email","").strip()
-        phone   = request.form.get("phone","").strip()
-        dob     = request.form.get("dob","").strip()
+        first   = request.form.get("first_name", "").strip()
+        last    = request.form.get("last_name", "").strip()
+        email   = request.form.get("email", "").strip()
+        phone   = request.form.get("phone", "").strip()
+        dob     = request.form.get("dob", "").strip()
         student = request.form.get("student") == "yes"
-        school  = request.form.get("school","").strip()
+        school  = request.form.get("school", "").strip()
         if not all([first, last, email, phone, dob]):
             error = "Please fill in all required fields."
         elif student and not school:
             error = "Please enter your school name."
         else:
-            price   = session["chosen_ticket"]["price"]
+            price    = session["chosen_ticket"]["price"]
             discount = round(price * 0.20, 2) if student else 0
-            final   = round(price - discount, 2)
+            final    = round(price - discount, 2)
             ticket_id = make_ticket_id()
             session["user_details"] = {
                 "first_name": first, "last_name": last,
@@ -147,7 +166,7 @@ def details():
     return render_template("details.html",
         park=session["chosen_park"],
         ticket=session["chosen_ticket"],
-        location=session.get("user_location",""))
+        location=session.get("user_location", ""))
 
 @app.route("/confirmation")
 def confirmation():
@@ -168,24 +187,24 @@ def download_csv():
 
     rows = [
         ["Field", "Value"],
-        ["Ticket ID",        order.get("ticket_id","")],
-        ["First Name",       user.get("first_name","")],
-        ["Last Name",        user.get("last_name","")],
-        ["Email",            user.get("email","")],
-        ["Phone",            user.get("phone","")],
-        ["Date of Birth",    user.get("dob","")],
-        ["Location Entered", session.get("user_location","")],
-        ["Park Selected",    park.get("name","")],
-        ["Park City",        park.get("city","")],
-        ["Distance",         f"{park.get('dist','')} miles away"],
-        ["Est. Drive Time",  park.get("drive","")],
-        ["Ticket Type",      ticket.get("name","")],
-        ["Base Price",       f"${order.get('base_price',0):.2f}"],
+        ["Ticket ID",        order.get("ticket_id", "")],
+        ["First Name",       user.get("first_name", "")],
+        ["Last Name",        user.get("last_name", "")],
+        ["Email",            user.get("email", "")],
+        ["Phone",            user.get("phone", "")],
+        ["Date of Birth",    user.get("dob", "")],
+        ["Location Entered", session.get("user_location", "")],
+        ["Park Selected",    park.get("name", "")],
+        ["Park City",        park.get("city", "")],
+        ["Distance",         f"{park.get('dist', '')} miles away"],
+        ["Est. Drive Time",  park.get("drive", "")],
+        ["Ticket Type",      ticket.get("name", "")],
+        ["Base Price",       f"${order.get('base_price', 0):.2f}"],
         ["Student",          "Yes" if user.get("student") else "No"],
-        ["School",           user.get("school","N/A") if user.get("student") else "N/A"],
-        ["Student Discount", f"-${order.get('discount',0):.2f} (20%)" if user.get("student") else "None"],
-        ["Final Price Paid", f"${order.get('final_price',0):.2f}"],
-        ["Purchase Date",    order.get("date","")],
+        ["School",           user.get("school", "N/A") if user.get("student") else "N/A"],
+        ["Student Discount", f"-${order.get('discount', 0):.2f} (20%)" if user.get("student") else "None"],
+        ["Final Price Paid", f"${order.get('final_price', 0):.2f}"],
+        ["Purchase Date",    order.get("date", "")],
     ]
 
     output = io.StringIO()
@@ -197,7 +216,79 @@ def download_csv():
         io.BytesIO(output.getvalue().encode()),
         mimetype="text/csv",
         as_attachment=True,
-        download_name=f"SixFlags_Ticket_{order.get('ticket_id','receipt')}.csv"
+        download_name=f"SixFlags_Ticket_{order.get('ticket_id', 'receipt')}.csv"
+    )
+
+# ── GIFT SHOP ROUTES ─────────────────────────────────────────────────────────
+@app.route("/gift-shop")
+def gift_shop():
+    park = session.get("chosen_park", {})
+    user = session.get("user_details", {})
+    order = session.get("order", {})
+    # Pass inventory and store config to template
+    return render_template("gift_shop.html",
+        inventory=GIFT_INVENTORY,
+        store_config=GIFT_STORE_CONFIG,
+        park=park,
+        user=user,
+        order=order)
+
+@app.route("/gift-shop/checkout", methods=["POST"])
+def gift_shop_checkout():
+    """Process gift shop cart and generate CSV receipt."""
+    cart_json = request.form.get("cart", "[]")
+    import json
+    cart = json.loads(cart_json)   # list of item name strings
+
+    tax_rate = GIFT_STORE_CONFIG[0]
+    store_id = GIFT_STORE_CONFIG[1]
+    user     = session.get("user_details", {})
+    order    = session.get("order", {})
+    park     = session.get("chosen_park", {})
+
+    # Build receipt using list comprehension — mirrors gift_shop.py logic
+    prices    = [GIFT_INVENTORY[item]["price"] for item in cart if item in GIFT_INVENTORY]
+    subtotal  = round(sum(prices), 2)
+    total_tax = round(subtotal * tax_rate, 2)
+    total     = round(subtotal + total_tax, 2)
+
+    rows = [
+        ["Six Flags Gift Shop Receipt", ""],
+        ["Store ID", store_id],
+        ["Park", park.get("name", "N/A")],
+        ["Customer", f"{user.get('first_name', '')} {user.get('last_name', '')}".strip() or "Guest"],
+        ["Ticket ID", order.get("ticket_id", "N/A")],
+        ["Purchase Date", datetime.now().strftime("%b %d, %Y")],
+        ["", ""],
+        ["Item", "Price"],
+    ]
+    # pop-style iteration mirrors cart.pop(0) in original class
+    item_list = list(cart)
+    while item_list:
+        item = item_list.pop(0)
+        if item in GIFT_INVENTORY:
+            rows.append([item, f"${GIFT_INVENTORY[item]['price']:.2f}"])
+
+    rows += [
+        ["", ""],
+        ["Subtotal", f"${subtotal:.2f}"],
+        [f"Tax ({int(tax_rate*100)}%)", f"${total_tax:.2f}"],
+        ["TOTAL", f"${total:.2f}"],
+        ["", ""],
+        ["Thank you for your visit!", ""],
+    ]
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerows(rows)
+    output.seek(0)
+
+    receipt_id = "GS-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    return send_file(
+        io.BytesIO(output.getvalue().encode()),
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name=f"SixFlags_GiftShop_{receipt_id}.csv"
     )
 app = app
 if __name__ == "__main__":
