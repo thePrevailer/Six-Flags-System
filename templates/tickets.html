@@ -58,7 +58,7 @@ function pickTicket(el, val) {
         <div class="tc-ribbon"></div>
         <div class="tc-body">
           <div class="tc-name">{{ t.name }}</div>
-          <div class="tc-price"><sup>$</sup>{{ "{:.0f}".format(t.price) }}<span style="font-size:1.2rem">.{{ "%02d"|format((t.price % 1 * 100)|int) }}</span></div>
+          <div class="tc-price"><sup>$</sup>{{ t.price|int }}<span style="font-size:1.2rem">.{{ "%02d"|format(((t.price - t.price|int) * 100)|round|int) }}</span></div>
           <div class="tc-note">{{ t.note }}</div>
           <ul class="tc-features">
             {% for f in t.features %}<li>{{ f }}</li>{% endfor %}

@@ -96,7 +96,12 @@ def location():
                 ranked = []
                 for p in PARKS:
                     dist = haversine(geo["lat"], geo["lng"], p["lat"], p["lng"])
-                    ranked.append({**p, "dist": dist, "drive": drive_time(dist)})
+                    # Store only essential fields to keep session cookie under 4KB limit
+                    ranked.append({
+                        "name": p["name"], "city": p["city"], "icon": p["icon"],
+                        "rides": p["rides"], "coasters": p["coasters"],
+                        "tags": p["tags"], "dist": dist, "drive": drive_time(dist)
+                    })
                 ranked.sort(key=lambda x: x["dist"])
                 session["ranked_parks"] = ranked
                 session["user_location"] = loc
@@ -166,7 +171,8 @@ def details():
     return render_template("details.html",
         park=session["chosen_park"],
         ticket=session["chosen_ticket"],
-        location=session.get("user_location", ""))
+        location=session.get("user_location", ""),
+        error=error)
 
 @app.route("/confirmation")
 def confirmation():
